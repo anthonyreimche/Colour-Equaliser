@@ -1,0 +1,22 @@
+{
+  "name": "safelight-colour-equaliser",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Colour Equaliser extension for Safelight — a port of Ansel's colour equalizer (three brightness rings of hue curves → an HLG Rec2020 colour lookup table).",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:gpu": "node test/gpu/run.cjs",
+    "test:reference": "node test/reference/build.cjs"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.17",
+    "typescript": "~6.0.3",
+    "vite": "^8.0.16",
+    "vitest": "^4.1.10"
+  },
+  "keywords": ["safelight-extension"],
+  "license": "GPL-3.0-or-later"
+}
