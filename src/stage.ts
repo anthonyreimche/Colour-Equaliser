@@ -92,6 +92,9 @@ export function ringsStage(): ProcessingStageContribution {
     ],
     passes: [anchorsPass(), latticePass()],
     presetScope: "global",
+    // A mask's copy builds its own table from the mask's curves; the host
+    // points its inline at the copy's result sampler by the same name.
+    mask: { maskable: true },
   };
 }
 

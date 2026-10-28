@@ -58,6 +58,13 @@ Ansel's, in Ansel's order:
 - **Options**: White level (EV, Ansel's default +1), Brightness smoothing (%),
   Saturation smoothing, Hue smoothing (radians), Neutral protection,
   Interpolation (tetrahedral / trilinear / pyramid).
+- **In masks:** add Colour Equaliser to a mask from the Masking panel's Adjust
+  tab to run a second equaliser inside that mask only, with its own curves and
+  options. The mask's panel has everything the dock's has except Pick, Adjust
+  on image and the marks they leave on the graph, which read the photo for its
+  own equaliser. It needs the current processing: on a photo edited in an
+  earlier Safelight, use Update processing first. Each mask that uses it builds
+  its own table, so many such masks take a moment longer to show.
 - **Reset** from the panel's dock header menu.
 
 Settings persist per photo, take part in undo and presets, and render
@@ -157,15 +164,17 @@ saturations, the anchors, the field at 600 lattice points, a full level-16
 table, the three interpolations inside and outside the cube, and end-to-end
 pixels through a level-32 table for three parameter sets; the bag bridge; the
 stage contracts with a **per-draw texture-fetch budget** on the real GLSL; the
-graph geometry; the sampler's scheduling; the activation contract.
+graph geometry; the sampler's scheduling; the activation contract; and the
+panel and graph rendered without a DOM, in the dock and inside a mask.
 
 `npm run test:gpu` runs the stage through a SafeLight checkout's WebGL harness
 (headless Chromium on SwiftShader): the passes and the inline compile, the
 defaults are a bit-exact no-op, and on a hue-sweep scene the render matches
 Ansel's `process()` for three parameter sets and all three interpolations to
 0.4–0.6 % of the change with no sample off by more than 2e-3, at the table
-level a 256² frame affords and again at the level a 96×64 frame affords. It
-needs the SafeLight repository beside this one (or `SAFELIGHT_CORE=<path>`)
+level a 256² frame affords and again at the level a 96×64 frame affords; a
+mask over the right half builds its own table there and leaves the left half
+bit-identical. It needs the SafeLight repository beside this one (or `SAFELIGHT_CORE=<path>`)
 with its dev dependencies installed.
 
 ## Install
@@ -173,7 +182,7 @@ with its dev dependencies installed.
 Install from the SafeLight **Extensions** window, or load this folder via
 Developer Tools ▸ Extensions during development. A **Colour Equaliser** panel
 appears in Develop (right dock). Build from source with `npm install && npm run
-build` (outputs `dist/index.js`). Needs SafeLight 2.5.5 or later.
+build` (outputs `dist/index.js`). Needs SafeLight 3.1.0 or later.
 
 ## License & credits
 

@@ -1,12 +1,12 @@
 {
   "id": "colour-equaliser",
   "name": "Colour Equaliser",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A port of Ansel's colour equalizer — shape saturation, brightness and hue per hue on three brightness rings (shadows, midtones, highlights), applied through an HLG Rec2020 colour lookup table with Ansel's smoothing and neutral protection.",
   "author": "Anthony Reimche",
   "main": "dist/index.js",
   "license": "GPL-3.0-or-later",
   "categories": ["Develop", "Color"],
   "keywords": ["ansel", "darktable", "colour-equaliser", "color-equalizer", "color-zones", "hue", "saturation", "brightness", "rings", "lut", "ucs"],
-  "minAppVersion": "2.5.5"
+  "minAppVersion": "3.1.0"
 }

@@ -1,7 +1,7 @@
 {
   "name": "safelight-colour-equaliser",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Colour Equaliser extension for Safelight — a port of Ansel's colour equalizer (three brightness rings of hue curves → an HLG Rec2020 colour lookup table).",
   "type": "module",
   "scripts": {

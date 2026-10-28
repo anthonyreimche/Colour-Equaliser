@@ -8,7 +8,7 @@
 
 import { EqualiserOverlay } from "./Overlay";
 import { EqualiserPanel } from "./Panel";
-import { EXT_ID, rederivePatch, resetPatch } from "./params";
+import { EXT_ID, KEY, curveKeys, rederivePatch, resetPatch } from "./params";
 import { api, initRuntime } from "./runtime";
 import type { DevelopStoreState, SafelightAPI } from "./safelight";
 import { allStages } from "./stage";
@@ -39,6 +39,9 @@ export function activate(host: SafelightAPI): void {
     component: EqualiserPanel,
     defaultDock: { module: "develop", direction: "right", order: 7, width: 268 },
     onReset: reset,
+    // The same panel edits a mask's curves and options in the Masking panel's
+    // Adjust tab; the on-image overlay stays the photo's.
+    mask: { component: EqualiserPanel, owns: [...curveKeys(), ...Object.values(KEY)] },
   });
 
   host.registerSlot({

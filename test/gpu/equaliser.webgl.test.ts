@@ -10,7 +10,10 @@
 //  • the table built by two draws on half-float targets, read back through
 //    textureSize / texelFetch and interpolated three ways, matches Ansel's
 //    process() (equalisePixel) at the level the frame affords;
-//  • a small frame takes the smaller level the same way.
+//  • a small frame takes the smaller level the same way;
+//  • a mask's copy of the stage builds its own table from the mask's curves
+//    and applies it inside the mask, leaving every pixel outside it as the
+//    photo's own curves left it.
 //
 // The timings it prints are SwiftShader (CPU) numbers, only useful relative
 // to each other.
@@ -31,6 +34,7 @@ import {
   identityParams,
   withRenderer,
 } from "@/rendering/webgl/webgl.test-support";
+import { defaultMaskAdjustments, type Mask } from "@/catalog/types";
 
 // ── Scenes ───────────────────────────────────────────────────────────────────
 
@@ -104,8 +108,15 @@ interface Comparison {
 const CLIP_LO = 0.002;
 const CLIP_HI = 0.8;
 
-function compare(on: Frame, off: Frame, ref: { input: Float64Array; output: Float64Array }, w: number): Comparison {
-  const n = on.width * on.height;
+/** The GPU's change against Ansel's, over the columns `inside` picks (all by default). */
+function compare(
+  on: Frame,
+  off: Frame,
+  ref: { input: Float64Array; output: Float64Array },
+  w: number,
+  inside = (_x: number) => true,
+): Comparison {
+  let n = 0;
   let se = 0;
   let change = 0;
   let count = 0;
@@ -113,7 +124,9 @@ function compare(on: Frame, off: Frame, ref: { input: Float64Array; output: Floa
   let max = 0;
   let outliers = 0;
   let worst = "";
-  for (let p = 0; p < n; p++) {
+  for (let p = 0; p < on.width * on.height; p++) {
+    if (!inside(p % w)) continue;
+    n++;
     const out = [ref.output[p * 3], ref.output[p * 3 + 1], ref.output[p * 3 + 2]];
     if (out.some((v) => v < CLIP_LO || v > CLIP_HI)) {
       clipped++;
@@ -163,6 +176,15 @@ const CASES: [string, Params][] = [
   ["A trilinear", { ...A, interpolation: 1 }],
   ["A pyramid", { ...A, interpolation: 2 }],
 ];
+
+// A linear gradient whose step sits at u = 0.5: the right half is covered.
+const RIGHT_HALF: Mask["components"][number] = {
+  id: "right",
+  kind: "linear",
+  mode: "add",
+  invert: false,
+  linear: { x0: 0.5, y0: 0, x1: 0.5001, y1: 0 },
+};
 
 function movedFlatNodes(): Params {
   const curves = defaultCurves();
@@ -254,5 +276,50 @@ describe("Colour Equaliser stage on the real renderer", () => {
     expect(s.changeRms).toBeGreaterThan(1e-3);
     expect(s.outliers).toBe(0);
     expect(s.rmse).toBeLessThan(Math.max(s.changeRms * MAX_ERROR_FRACTION, MAX_ERROR_FLOOR));
+  });
+
+  it("applies a mask's curves inside the mask, and the photo's everywhere else", () => {
+    const [name, params] = CASES[1];
+    const level = lutLevel(W * H);
+    const mask: Mask = {
+      id: "m",
+      name: "Mask",
+      visible: true,
+      invert: false,
+      opacity: 100,
+      adj: defaultMaskAdjustments(),
+      panels: ["colour-equaliser.panel"],
+      bag: deriveAll(params),
+      components: [RIGHT_HALF],
+    };
+    withRenderer({ stages: [...builtinStages(), ...allStages()], pipeline: LINEAR_PROBE_PIPELINE }, (renderer) => {
+      renderer.setImage(SWEEP_IMAGE);
+      renderer.setContributedParams(deriveAll(DEFAULT_PARAMS));
+      renderer.setParams(identityParams({ processVersion: 2 }));
+      const off = renderer.captureFloatFrame();
+      renderer.setParams(identityParams({ processVersion: 2, masks: [mask] }));
+      const on = renderer.captureFloatFrame();
+      expect(off).not.toBeNull();
+      expect(on).not.toBeNull();
+
+      // Columns either side of the step, clear of the three its baked coverage
+      // ramps over at this width (about 0.2, 0.6 and 0.98 from column 128).
+      const left = (x: number) => x < W / 2 - 1;
+      const right = (x: number) => x > W / 2 + 2;
+      for (let p = 0; p < W * H; p++) {
+        if (!left(p % W)) continue;
+        for (let ch = 0; ch < 3; ch++) expect(on!.data[p * 4 + ch]).toBe(off!.data[p * 4 + ch]);
+      }
+      const s = compare(on!, off!, reference(SWEEP, params, level), W, right);
+      console.log(
+        `[ceq-gpu] masked ${name}: Ansel change rms ${s.changeRms.toExponential(2)}; ` +
+          `error rms ${s.rmse.toExponential(2)} (${((100 * s.rmse) / s.changeRms).toFixed(2)}%), ` +
+          `max ${s.max.toExponential(2)}, ${s.outliers} outliers, ${(100 * s.clipped).toFixed(2)}% clipped; worst ${s.worst}`,
+      );
+      expect(s.changeRms).toBeGreaterThan(1e-3);
+      expect(s.clipped).toBeLessThan(0.1);
+      expect(s.outliers).toBe(0);
+      expect(s.rmse).toBeLessThan(Math.max(s.changeRms * MAX_ERROR_FRACTION, MAX_ERROR_FLOOR));
+    });
   });
 });

@@ -38,6 +38,10 @@ describe("ringsStage", () => {
   const anchors = anchorsPass();
   const lattice = latticePass();
 
+  it("runs again inside masks", () => {
+    expect(stage.mask).toEqual({ maskable: true });
+  });
+
   it("is one scene-linear stage after the sibling colour ports, in presets", () => {
     expect(stage.id).toBe(STAGE_ID);
     expect(stage.name).toBe("Colour Equaliser");

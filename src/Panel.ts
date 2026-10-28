@@ -4,6 +4,10 @@
 // carries the white level, the three smoothing radii, the neutral protection
 // and the interpolation. Sliders write the bag live and commit on release.
 // The active tabs are extension settings, not edits.
+//
+// It edits whatever useParamScope hands it: the photo's bag in the dock, a
+// mask's in the Masking panel's Adjust tab. The picker and Adjust on image
+// read the photo for its own equaliser, so they show only in the dock.
 
 import type { CSSProperties } from "react";
 import { CHANNELS, type Channel } from "./curve";
@@ -33,9 +37,8 @@ const CHANNEL_LABEL: Readonly<Record<Channel, string>> = {
 };
 const INTERPOLATION_LABEL = ["Tetrahedral", "Trilinear", "Pyramid"] as const;
 
-const HINT =
-  "Drag a node · Ctrl+click adds one · right-click removes it · double-click resets the curve · " +
-  "Adjust on image: scroll over the photo (Shift coarse, Alt fine), right-click adds a node there";
+const GRAPH_HINT = "Drag a node · Ctrl+click adds one · right-click removes it · double-click resets the curve";
+const ON_IMAGE_HINT = "Adjust on image: scroll over the photo (Shift coarse, Alt fine), right-click adds a node there";
 
 const HINT_STYLE: CSSProperties = { margin: 0, fontSize: 10, lineHeight: 1.4, color: "var(--color-text-muted)" };
 
@@ -53,20 +56,20 @@ export function EqualiserPanel() {
   const { useEffect, useState } = api().react;
   const { Slider } = api().components;
   const { Button, Select, SegmentedControl, Row, Stack } = api().ui;
-  const dev = api().stores.useDevelopStore;
-  const paramBag = dev((s) => s.paramBag);
+  const scope = api().develop.useParamScope();
+  const inMask = scope.maskId !== null;
   const mode = store()((s) => s.mode);
   const picker = store()((s) => s.picker);
   const [page, setPage] = useState<Page>(readPage);
   const [channel, setChannel] = useState<Channel>(readChannel);
 
-  useEffect(() => startLiveSampler(), []);
-  useEffect(() => () => store().getState().setMode(null), []);
+  useEffect(() => (inMask ? undefined : startLiveSampler()), [inMask]);
+  useEffect(() => (inMask ? undefined : () => store().getState().setMode(null)), [inMask]);
 
-  const p = readParams(paramBag);
-  const live = (): Params => readParams(dev.getState().paramBag);
-  const apply = (next: Params) => dev.getState().setDynParams(deriveAll(next));
-  const commit = (what: string) => void dev.getState().commitEdit(`Colour Equaliser ${what}`);
+  const p = readParams(scope.getParams());
+  const live = (): Params => readParams(scope.getParams());
+  const apply = (next: Params) => scope.setParams(deriveAll(next));
+  const commit = (what: string) => scope.commit(`Colour Equaliser ${what}`);
 
   const slider = (
     label: string,
@@ -174,7 +177,7 @@ export function EqualiserPanel() {
     pageTabs,
     channelTabs,
     h(EqualiserGraph, { key: `${ring}/${channel}`, ring, channel }),
-    tools,
-    h("p", { key: "hint", style: HINT_STYLE }, HINT),
+    inMask ? null : tools,
+    h("p", { key: "hint", style: HINT_STYLE }, inMask ? GRAPH_HINT : `${GRAPH_HINT} · ${ON_IMAGE_HINT}`),
   );
 }

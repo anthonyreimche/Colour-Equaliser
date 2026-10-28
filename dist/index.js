@@ -110,19 +110,19 @@ var f = d(s, c), p = n(f), m = t(p, r), h = t(i, f), g = {
 function _(e) {
 	return e <= 0 ? 0 : e <= 1 / 12 ? Math.sqrt(3 * e) : g.a * Math.log(12 * e - g.b) + g.c;
 }
-var v = 2.098883786377, y = .631651345306265, b = 1.12426773749357, x = 1.5831518565279648, S = 15.932993652962535, C = .6523997524738018, w = .6007557017508491, T = .8322850678616855, E = 1.33654221029386, ee = [
+var v = 2.098883786377, y = .631651345306265, b = 1.12426773749357, x = 1.5831518565279648, S = 15.932993652962535, C = .6523997524738018, w = .6007557017508491, T = .8322850678616855, ee = 1.33654221029386, te = [
 	-.783941002840055,
 	.745273540913283,
 	.318707282433486
-], te = [
+], ne = [
 	.277512987809202,
 	-.205375866083878,
 	2.16743692732158
-], ne = [
+], re = [
 	.153836578598858,
 	-.165478376301988,
 	.291320554395942
-], D = [1.39656225667, 1.4513954287], O = [1.49217352929, 1.52488637914], re = [
+], E = [1.39656225667, 1.4513954287], D = [1.49217352929, 1.52488637914], O = [
 	-1.124983854323892,
 	-.980483721769325,
 	1.86323315098672,
@@ -182,8 +182,8 @@ function me(e) {
 		0,
 		0
 	];
-	for (let n = 0; n < 3; n++) t[n] = ee[n] * e[0] + te[n] * e[1] + ne[n];
-	let n = pe(t[2]), r = t[0] / n, i = t[1] / n, a = D[0] * r / (Math.abs(r) + O[0]), o = D[1] * i / (Math.abs(i) + O[1]), s = re[0] * a + re[1] * o, c = re[2] * a + re[3] * o, l = le(e[2]), u = s * s + c * c;
+	for (let n = 0; n < 3; n++) t[n] = te[n] * e[0] + ne[n] * e[1] + re[n];
+	let n = pe(t[2]), r = t[0] / n, i = t[1] / n, a = E[0] * r / (Math.abs(r) + D[0]), o = E[1] * i / (Math.abs(i) + D[1]), s = O[0] * a + O[1] * o, c = O[2] * a + O[3] * o, l = le(e[2]), u = s * s + c * c;
 	return [
 		l / A,
 		S * l ** +C * u ** +w / A,
@@ -191,7 +191,7 @@ function me(e) {
 	];
 }
 function he(e) {
-	let t = e[0] * A, n = t > 0 ? (e[1] * A / (S * t ** +C)) ** T : 0, r = n * Math.cos(e[2]), i = n * Math.sin(e[2]), a = k[0] * r + k[1] * i, o = k[2] * r + k[3] * i, s = -O[0] * a / (Math.abs(a) - D[0]), c = -O[1] * o / (Math.abs(o) - D[1]), l = [
+	let t = e[0] * A, n = t > 0 ? (e[1] * A / (S * t ** +C)) ** T : 0, r = n * Math.cos(e[2]), i = n * Math.sin(e[2]), a = k[0] * r + k[1] * i, o = k[2] * r + k[3] * i, s = -D[0] * a / (Math.abs(a) - E[0]), c = -D[1] * o / (Math.abs(o) - E[1]), l = [
 		0,
 		0,
 		0
@@ -205,7 +205,7 @@ function he(e) {
 	];
 }
 function ge(e) {
-	let t = e[0] * (e[1] ** +E + 1);
+	let t = e[0] * (e[1] ** +ee + 1);
 	return [
 		e[2],
 		t > 0 ? e[1] / t : 0,
@@ -215,7 +215,7 @@ function ge(e) {
 function _e(e) {
 	let t = e[1] * e[2];
 	return [
-		e[2] / (t ** +E + 1),
+		e[2] / (t ** +ee + 1),
 		t,
 		e[0]
 	];
@@ -884,50 +884,50 @@ function Nt(e, t, n) {
 	return i < -1 ? -1 : i > 1 ? 1 : i;
 }
 function Pt({ ring: e, channel: t }) {
-	let { useEffect: n, useRef: r, useState: i } = q().react, a = q().stores.useDevelopStore, o = a((e) => e.paramBag), s = Y()((e) => e.cursor), c = Y()((e) => e.picker), l = G(o).curves[e][t], [u, d] = i(Ot), [f, p] = i(-1), [m, h] = i(0), g = r(null), _ = r(null), v = r(null), y = Ke(u);
+	let { useEffect: n, useRef: r, useState: i } = q().react, a = q().develop.useParamScope(), o = a.maskId !== null, s = a.getParams(), c = Y()((e) => o ? null : e.cursor), l = Y()((e) => o ? null : e.picker), u = G(s).curves[e][t], [d, f] = i(Ot), [p, m] = i(-1), [h, g] = i(0), _ = r(null), v = r(null), y = r(null), b = Ke(d);
 	n(() => {
-		let e = g.current;
+		let e = _.current;
 		if (!e) return;
 		let t = new ResizeObserver((e) => {
 			let t = Math.round(e[0].contentRect.width);
-			t > 40 && d(t);
+			t > 40 && f(t);
 		});
 		return t.observe(e), () => t.disconnect();
 	}, []), n(() => {
-		let e = new MutationObserver(() => h((e) => e + 1));
+		let e = new MutationObserver(() => g((e) => e + 1));
 		return e.observe(document.documentElement, { attributes: !0 }), e.observe(document.body, { attributes: !0 }), () => e.disconnect();
 	}, []), n(() => {
-		let n = _.current;
+		let n = v.current;
 		if (!n) return;
 		let r = window.devicePixelRatio || 1;
-		n.width = Math.round(y.width * r), n.height = Math.round(y.height * r);
+		n.width = Math.round(b.width * r), n.height = Math.round(b.height * r);
 		let i = n.getContext("2d");
-		i && (i.setTransform(r, 0, 0, r, 0, 0), Mt(i, y, kt(n), {
+		i && (i.setTransform(r, 0, 0, r, 0, 0), Mt(i, b, kt(n), {
 			ring: e,
 			channel: t,
-			nodes: l,
-			selected: f,
-			pickerHue: c?.hue ?? null,
-			cursor: s ? {
-				hue: s.hue,
-				inputCss: wt(s.inputRgb),
-				outputCss: wt(s.outputRgb),
-				offset: Nt(t, l, s.hue)
+			nodes: u,
+			selected: p,
+			pickerHue: l?.hue ?? null,
+			cursor: c ? {
+				hue: c.hue,
+				inputCss: wt(c.inputRgb),
+				outputCss: wt(c.outputRgb),
+				offset: Nt(t, u, c.hue)
 			} : null
 		}));
 	}, [
-		o,
+		s,
 		e,
 		t,
-		f,
-		u,
-		s,
+		p,
+		d,
 		c,
-		m
+		l,
+		h
 	]);
-	let b = () => G(a.getState().paramBag), x = (n) => {
-		let r = b();
-		a.getState().setDynParams(K({
+	let x = () => G(a.getParams()), S = (n) => {
+		let r = x();
+		a.setParams(K({
 			...r,
 			curves: {
 				...r.curves,
@@ -937,48 +937,48 @@ function Pt({ ring: e, channel: t }) {
 				}
 			}
 		}));
-	}, S = (e) => void a.getState().commitEdit(`Colour Equaliser ${e}`), C = (e) => {
+	}, C = (e) => a.commit(`Colour Equaliser ${e}`), w = (e) => {
 		let t = e.currentTarget.getBoundingClientRect();
 		return {
-			px: (e.clientX - t.left) * y.width / t.width,
-			py: (e.clientY - t.top) * y.height / t.height
+			px: (e.clientX - t.left) * b.width / t.width,
+			py: (e.clientY - t.top) * b.height / t.height
 		};
-	}, w = (n) => {
+	}, T = (n) => {
 		if (n.button !== 0) return;
-		let { px: r, py: i } = C(n), a = b().curves[e][t];
+		let { px: r, py: i } = w(n), a = x().curves[e][t];
 		if (n.ctrlKey || n.metaKey) {
-			let { x: e } = qe(y, r, i), t = Ie(a, e, F(a, e));
-			t && (x(t.nodes), p(t.index), S("add node"));
+			let { x: e } = qe(b, r, i), t = Ie(a, e, F(a, e));
+			t && (S(t.nodes), m(t.index), C("add node"));
 			return;
 		}
-		let o = Je(a, y, r, i);
-		p(o), o >= 0 && (n.currentTarget.setPointerCapture(n.pointerId), v.current = {
+		let o = Je(a, b, r, i);
+		m(o), o >= 0 && (n.currentTarget.setPointerCapture(n.pointerId), y.current = {
 			node: o,
 			moved: !1
 		});
-	}, T = (n) => {
-		let { px: r, py: i } = C(n), a = b().curves[e][t], o = v.current;
+	}, ee = (n) => {
+		let { px: r, py: i } = w(n), a = x().curves[e][t], o = y.current;
 		if (o) {
-			let { x: e, y: t } = qe(y, r, i), n = Le(a, o.node, e, t);
+			let { x: e, y: t } = qe(b, r, i), n = Le(a, o.node, e, t);
 			if (n) {
 				let e = n[o.node];
-				o.node = P(n).findIndex((t) => t.x === e.x - Math.floor(e.x) && t.y === e.y), o.moved = !0, x(n), p(o.node);
+				o.node = P(n).findIndex((t) => t.x === e.x - Math.floor(e.x) && t.y === e.y), o.moved = !0, S(n), m(o.node);
 			}
 			return;
 		}
-		p(Je(a, y, r, i));
-	}, E = () => {
-		let e = v.current;
-		v.current = null, e?.moved && S("curve");
-	}, ee = (n) => {
-		n.preventDefault();
-		let r = b().curves[e][t], i = Re(r, f);
-		i && (x(i), p(-1), S("remove node"));
+		m(Je(a, b, r, i));
 	}, te = () => {
-		x(Ae()), p(-1), S("reset curve");
-	}, ne = {
-		width: y.width,
-		height: y.height,
+		let e = y.current;
+		y.current = null, e?.moved && C("curve");
+	}, ne = (n) => {
+		n.preventDefault();
+		let r = x().curves[e][t], i = Re(r, p);
+		i && (S(i), m(-1), C("remove node"));
+	}, re = () => {
+		S(Ae()), m(-1), C("reset curve");
+	}, E = {
+		width: b.width,
+		height: b.height,
 		display: "block",
 		touchAction: "none",
 		borderRadius: 4,
@@ -986,19 +986,19 @@ function Pt({ ring: e, channel: t }) {
 		cursor: "crosshair"
 	};
 	return J("div", {
-		ref: g,
+		ref: _,
 		style: { width: "100%" }
 	}, J("canvas", {
-		ref: _,
-		style: ne,
-		onPointerDown: w,
-		onPointerMove: T,
-		onPointerUp: E,
+		ref: v,
+		style: E,
+		onPointerDown: T,
+		onPointerMove: ee,
+		onPointerUp: te,
 		onPointerLeave: () => {
-			v.current || p(-1);
+			y.current || m(-1);
 		},
-		onContextMenu: ee,
-		onDoubleClick: te
+		onContextMenu: ne,
+		onDoubleClick: re
 	}));
 }
 //#endregion
@@ -1019,24 +1019,24 @@ var Ft = {
 	"Tetrahedral",
 	"Trilinear",
 	"Pyramid"
-], Bt = "Drag a node · Ctrl+click adds one · right-click removes it · double-click resets the curve · Adjust on image: scroll over the photo (Shift coarse, Alt fine), right-click adds a node there", Vt = {
+], Bt = "Drag a node · Ctrl+click adds one · right-click removes it · double-click resets the curve", Vt = "Adjust on image: scroll over the photo (Shift coarse, Alt fine), right-click adds a node there", Ht = {
 	margin: 0,
 	fontSize: 10,
 	lineHeight: 1.4,
 	color: "var(--color-text-muted)"
 };
-function Ht() {
+function Ut() {
 	let e = q().settings.get(Ft.ring, "shadows");
 	return It.includes(e) ? e : "shadows";
 }
-function Ut() {
+function Wt() {
 	let e = q().settings.get(Ft.channel, "saturation");
 	return M.includes(e) ? e : "saturation";
 }
-function Wt() {
-	let { useEffect: e, useState: t } = q().react, { Slider: n } = q().components, { Button: r, Select: i, SegmentedControl: a, Row: o, Stack: s } = q().ui, c = q().stores.useDevelopStore, l = c((e) => e.paramBag), u = Y()((e) => e.mode), d = Y()((e) => e.picker), [f, p] = t(Ht), [m, h] = t(Ut);
-	e(() => Dt(), []), e(() => () => Y().getState().setMode(null), []);
-	let g = G(l), _ = () => G(c.getState().paramBag), v = (e) => c.getState().setDynParams(K(e)), y = (e) => void c.getState().commitEdit(`Colour Equaliser ${e}`), b = (e, t, r, i, a) => J(n, {
+function Gt() {
+	let { useEffect: e, useState: t } = q().react, { Slider: n } = q().components, { Button: r, Select: i, SegmentedControl: a, Row: o, Stack: s } = q().ui, c = q().develop.useParamScope(), l = c.maskId !== null, u = Y()((e) => e.mode), d = Y()((e) => e.picker), [f, p] = t(Ut), [m, h] = t(Wt);
+	e(() => l ? void 0 : Dt(), [l]), e(() => l ? void 0 : () => Y().getState().setMode(null), [l]);
+	let g = G(c.getParams()), _ = () => G(c.getParams()), v = (e) => c.setParams(K(e)), y = (e) => c.commit(`Colour Equaliser ${e}`), b = (e, t, r, i, a) => J(n, {
 		key: t,
 		label: e,
 		value: g[t],
@@ -1135,15 +1135,15 @@ function Wt() {
 		key: `${S}/${m}`,
 		ring: S,
 		channel: m
-	}), T, J("p", {
+	}), l ? null : T, J("p", {
 		key: "hint",
-		style: Vt
-	}, Bt));
+		style: Ht
+	}, l ? Bt : `${Bt} · ${Vt}`));
 }
 //#endregion
 //#region src/Overlay.ts
-var Gt = 300, Kt = 14;
-function qt(e, t, n, r, i) {
+var Kt = 300, qt = 14;
+function Jt(e, t, n, r, i) {
 	if (!i || n.width <= 0 || n.height <= 0 || i.w <= 0 || i.h <= 0) return null;
 	let a = r / n.width, o = ((e - n.left) * a - i.x) / i.w, s = ((t - n.top) * a - i.y) / i.h;
 	return o < 0 || o > 1 || s < 0 || s > 1 ? null : {
@@ -1151,14 +1151,14 @@ function qt(e, t, n, r, i) {
 		y: s
 	};
 }
-function Jt() {
-	let e = Ht();
+function Yt() {
+	let e = Ut();
 	return {
 		ring: e === "options" ? "midtones" : e,
-		channel: Ut()
+		channel: Wt()
 	};
 }
-function Yt(e, t, n, r) {
+function Xt(e, t, n, r) {
 	return {
 		...e,
 		curves: {
@@ -1170,10 +1170,10 @@ function Yt(e, t, n, r) {
 		}
 	};
 }
-function Xt(e) {
+function Zt(e) {
 	return e.shiftKey ? "coarse" : e.altKey ? "fine" : "normal";
 }
-function Zt(e) {
+function Qt(e) {
 	let { input: t, output: n } = Y().getState().samples;
 	if (!t) return null;
 	let r = Ct(t, e.x, e.y);
@@ -1186,7 +1186,7 @@ function Zt(e) {
 		outputRgb: i
 	} : null;
 }
-function Qt() {
+function $t() {
 	let { useEffect: e, useRef: t, useState: n } = q().react, r = q().stores.useDevelopStore, i = r((e) => e.paramBag), a = Y()((e) => e.mode), o = Y()((e) => e.cursor), s = q().develop.useDevelopOverlay(), c = t(null), [l, u] = n(!1), d = t(null);
 	e(() => {
 		if (a === null) return;
@@ -1208,7 +1208,7 @@ function Qt() {
 	let f = () => {
 		d.current !== null && window.clearTimeout(d.current), d.current = window.setTimeout(() => {
 			d.current = null, r.getState().commitEdit("Colour Equaliser scroll");
-		}, Gt);
+		}, Kt);
 	};
 	if (e(() => () => {
 		d.current !== null && (window.clearTimeout(d.current), d.current = null, r.getState().commitEdit("Colour Equaliser scroll"));
@@ -1220,8 +1220,8 @@ function Qt() {
 			let t = Y().getState().cursor;
 			if (!t || e.deltaY === 0) return;
 			e.preventDefault(), e.stopPropagation();
-			let { ring: n, channel: i } = Jt(), a = G(r.getState().paramBag), o = Be(a.curves[n][i], i, L(t.hue), e.deltaY < 0 ? 1 : -1, Xt(e));
-			r.getState().setDynParams(K(Yt(a, n, i, o))), f();
+			let { ring: n, channel: i } = Yt(), a = G(r.getState().paramBag), o = Be(a.curves[n][i], i, L(t.hue), e.deltaY < 0 ? 1 : -1, Zt(e));
+			r.getState().setDynParams(K(Xt(a, n, i, o))), f();
 		};
 		return e.addEventListener("wheel", t, { passive: !1 }), () => e.removeEventListener("wheel", t);
 	}, [a]), a === null) return null;
@@ -1234,11 +1234,11 @@ function Qt() {
 				x: (e - r.left) * i,
 				y: (t - r.top) * i
 			},
-			uv: qt(e, t, r, n.clientWidth, s.rect)
+			uv: Jt(e, t, r, n.clientWidth, s.rect)
 		};
 	}, m = (e) => {
 		if (a !== "adjust") return;
-		let t = p(e.clientX, e.clientY), n = t?.uv && Zt(t.uv);
+		let t = p(e.clientX, e.clientY), n = t?.uv && Qt(t.uv);
 		Y().getState().setCursor(t && n ? {
 			hue: n.hue,
 			inputRgb: n.inputRgb,
@@ -1248,7 +1248,7 @@ function Qt() {
 	}, h = (e) => {
 		if (e.button !== 0 || a !== "pick") return;
 		e.preventDefault();
-		let t = p(e.clientX, e.clientY), n = t?.uv && Zt(t.uv);
+		let t = p(e.clientX, e.clientY), n = t?.uv && Qt(t.uv);
 		n && (Y().getState().setPicker({
 			hue: n.hue,
 			brightness: n.brightness
@@ -1258,8 +1258,8 @@ function Qt() {
 		e.preventDefault();
 		let t = Y().getState().cursor;
 		if (!t) return;
-		let { ring: n, channel: i } = Jt(), o = G(r.getState().paramBag), s = o.curves[n][i], c = L(t.hue), l = Ie(s, c, F(s, c));
-		l && (r.getState().setDynParams(K(Yt(o, n, i, l.nodes))), r.getState().commitEdit("Colour Equaliser add node"));
+		let { ring: n, channel: i } = Yt(), o = G(r.getState().paramBag), s = o.curves[n][i], c = L(t.hue), l = Ie(s, c, F(s, c));
+		l && (r.getState().setDynParams(K(Xt(o, n, i, l.nodes))), r.getState().commitEdit("Colour Equaliser add node"));
 	}, _ = {
 		position: "absolute",
 		inset: 0,
@@ -1267,8 +1267,8 @@ function Qt() {
 		cursor: a === "pick" ? q().cursors.resolve("pick") : o ? "none" : "crosshair"
 	}, v = null;
 	if (a === "adjust" && o) {
-		let { ring: e, channel: t } = Jt();
-		v = $t(o, Nt(t, G(i).curves[e][t], o.hue));
+		let { ring: e, channel: t } = Yt();
+		v = en(o, Nt(t, G(i).curves[e][t], o.hue));
 	}
 	return J("div", {
 		ref: c,
@@ -1279,8 +1279,8 @@ function Qt() {
 		onPointerLeave: () => Y().getState().setCursor(null)
 	}, v);
 }
-function $t(e, t) {
-	let n = Kt, r = n * .55, i = n * 1.55, a = 26.7, o = 57.4, s = o / 2, c = wt(e.outputRgb), l = wt(e.inputRgb), u = 2 * Math.PI * Math.abs(t), d = -Math.PI / 2 + (t > 0 ? u : -u), f = Math.abs(t) > 1e-4 ? J("path", {
+function en(e, t) {
+	let n = qt, r = n * .55, i = n * 1.55, a = 26.7, o = 57.4, s = o / 2, c = wt(e.outputRgb), l = wt(e.inputRgb), u = 2 * Math.PI * Math.abs(t), d = -Math.PI / 2 + (t > 0 ? u : -u), f = Math.abs(t) > 1e-4 ? J("path", {
 		key: "arc",
 		d: `M ${s} 7 A ${i} ${i} 0 ${+(u > Math.PI)} ${+(t > 0)} ${s + i * Math.cos(d)} ${s + i * Math.sin(d)}`,
 		fill: "none",
@@ -1333,13 +1333,13 @@ function $t(e, t) {
 }
 //#endregion
 //#region src/glsl.ts
-function en(e) {
+function tn(e) {
 	let t = e.toPrecision(10);
 	if (!t.includes("e")) return t.includes(".") ? t : `${t}.0`;
 	let [n, r] = t.split("e");
 	return `${n.includes(".") ? n : `${n}.0`}e${r}`;
 }
-var Z = en, tn = (e) => `vec2(${e.map(Z).join(", ")})`, nn = (e) => `vec3(${e.map(Z).join(", ")})`, rn = (e) => `mat3(${[
+var Z = tn, nn = (e) => `vec2(${e.map(Z).join(", ")})`, rn = (e) => `vec3(${e.map(Z).join(", ")})`, an = (e) => `mat3(${[
 	0,
 	3,
 	6,
@@ -1349,14 +1349,14 @@ var Z = en, tn = (e) => `vec2(${e.map(Z).join(", ")})`, nn = (e) => `vec3(${e.ma
 	2,
 	5,
 	8
-].map((t) => Z(e[t])).join(", ")})`, an = Z(Math.PI), Q = Z(2 * Math.PI), on = `
+].map((t) => Z(e[t])).join(", ")})`, on = Z(Math.PI), Q = Z(2 * Math.PI), sn = `
 float ceYOfLStar(float L) {
   return pow(${Z(b)} * L / (${Z(v)} - L), ${Z(x)});
 }
 float ceSafeDiv(float d) { return d >= 0.0 ? max(${Z(ce)}, d) : min(-${Z(ce)}, d); }
 float ceWrap2Pi(float h) { return h - ${Q} * floor(h / ${Q}); }
-float ceWrapHuePi(float h) { return ceWrap2Pi(h + ${an}) - ${an}; }
-float ceWrapPi(float x) { return x - ${Q} * floor((x + ${an}) / ${Q}); }
+float ceWrapHuePi(float h) { return ceWrap2Pi(h + ${on}) - ${on}; }
+float ceWrapPi(float x) { return x - ${Q} * floor((x + ${on}) / ${Q}); }
 // (J, C, H radians) -> xyY D65; black stays black rather than 0/0.
 vec3 ceJchToXyY(vec3 jch) {
   float L = jch.x * ${Z(A)};
@@ -1366,8 +1366,8 @@ vec3 ceJchToXyY(vec3 jch) {
   vec2 p = M * vec2(cos(jch.z), sin(jch.z));
   vec2 uvs = vec2(${Z(k[0])} * p.x + ${Z(k[1])} * p.y,
                   ${Z(k[2])} * p.x + ${Z(k[3])} * p.y);
-  vec2 uv = -${tn(O)} * uvs / (abs(uvs) - ${tn(D)});
-  vec3 xyD = ${nn(ie)} * uv.x + ${nn(ae)} * uv.y + ${nn(oe)};
+  vec2 uv = -${nn(D)} * uvs / (abs(uvs) - ${nn(E)});
+  vec3 xyD = ${rn(ie)} * uv.x + ${rn(ae)} * uv.y + ${rn(oe)};
   return vec3(xyD.xy / ceSafeDiv(xyD.z), L > 0.0 ? ceYOfLStar(L) : 0.0);
 }
 vec3 ceXyYToXyz(vec3 xyY) {
@@ -1377,7 +1377,7 @@ vec3 ceXyYToXyz(vec3 xyY) {
 // (H radians, S, B) -> XYZ D65 at the graph white.
 vec3 ceHsbToXyz(vec3 hsb) {
   float C = hsb.y * hsb.z;
-  return ceXyYToXyz(ceJchToXyY(vec3(hsb.z / (pow(C, ${Z(E)}) + 1.0), C, hsb.x)));
+  return ceXyYToXyz(ceJchToXyY(vec3(hsb.z / (pow(C, ${Z(ee)}) + 1.0), C, hsb.x)));
 }
 float ceHlgOetf1(float E) {
   if (E <= 0.0) return 0.0;
@@ -1393,8 +1393,8 @@ float ceHlgEotf1(float e) {
 vec3 ceHlgEotf(vec3 e) { return vec3(ceHlgEotf1(e.x), ceHlgEotf1(e.y), ceHlgEotf1(e.z)); }
 // XYZ D65 -> the table's code values: CAT16 to D50, the profile's matrix, HLG.
 vec3 ceXyzToLutRgb(vec3 xyz) {
-  const mat3 cat16 = ${rn(a)};
-  const mat3 toRec2020 = ${rn(p)};
+  const mat3 cat16 = ${an(a)};
+  const mat3 toRec2020 = ${an(p)};
   return ceHlgOetf(toRec2020 * (cat16 * xyz));
 }
 vec3 ceHsbToLutRgb(vec3 hsb) { return ceXyzToLutRgb(ceHsbToXyz(hsb)); }
@@ -1434,16 +1434,16 @@ float ceWendland(float d) {
   float t = 1.0 - d;
   return t * t * t * t * (4.0 * d + 1.0);
 }
-`, sn = (e, t) => `float ${e}(int ring) { return ring == 0 ? ${Z(t[0])} : (ring == 1 ? ${Z(t[1])} : ${Z(t[2])}); }`, cn = `
-${sn("ceRingBrightness", R.map((e) => z[e]))}
-${sn("ceRefSat", R.map((e) => Ue[e]))}
-${sn("ceAxisRgb", R.map((e) => We(z[e])))}
-float ceCurveXToHue(float x) { return ceWrapHuePi((360.0 * x + ${Z(20)}) * ${an} / 180.0); }
+`, cn = (e, t) => `float ${e}(int ring) { return ring == 0 ? ${Z(t[0])} : (ring == 1 ? ${Z(t[1])} : ${Z(t[2])}); }`, ln = `
+${cn("ceRingBrightness", R.map((e) => z[e]))}
+${cn("ceRefSat", R.map((e) => Ue[e]))}
+${cn("ceAxisRgb", R.map((e) => We(z[e])))}
+float ceCurveXToHue(float x) { return ceWrapHuePi((360.0 * x + ${Z(20)}) * ${on} / 180.0); }
 // Channel 2 (hue) reads a shift in radians; 0 and 1 (saturation, brightness) a gain in [0, 2].
 float ceChannelValue(int channel, float y) {
   return channel == 2 ? (y - 0.5) * ${Q} : clamp(y * 2.0, 0.0, 2.0);
 }
-`, ln = R.flatMap((e) => M.map((t) => `${e}${ot[t]}`)), un = (e) => `vec4[10](${Array.from({ length: 10 }, (t, n) => `${e}${n}`).join(", ")})`, dn = ln.map((e, t) => `${t === 0 ? "if" : "else if"} (curve == ${t}) { n = ${un(e)}; count = ${e}Count; }`).join("\n  "), fn = `
+`, un = R.flatMap((e) => M.map((t) => `${e}${ot[t]}`)), dn = (e) => `vec4[10](${Array.from({ length: 10 }, (t, n) => `${e}${n}`).join(", ")})`, fn = un.map((e, t) => `${t === 0 ? "if" : "else if"} (curve == ${t}) { n = ${dn(e)}; count = ${e}Count; }`).join("\n  "), pn = `
 // Node k of a curve packed two per vec4.
 vec2 ceNode(vec4 n[10], int k) {
   vec4 c = n[k / 2];
@@ -1509,10 +1509,10 @@ float ceHermite(vec4 n[10], int count, float x) {
 float ceSample(int curve, float x) {
   vec4 n[10];
   int count = 0;
-  ${dn}
+  ${fn}
   return count < 2 ? 0.5 : ceHermite(n, count, x);
 }
-`, pn = `
+`, mn = `
 // The largest level <= 64 whose cube fits the target's texels, never below 2.
 int ceLutLevel(int texels) {
   int l = min(64, int(floor(pow(float(texels), 1.0 / 3.0))) + 1);
@@ -1565,7 +1565,7 @@ vec3 ceInterp(sampler2D lut, int w, int level, vec3 n, int mode) {
   if (b > r) return (1.0 - g) * c000 + (g - b) * c010 + (b - r) * c011 + r * c111;
   return (1.0 - g) * c000 + (g - r) * c010 + (r - b) * c110 + b * c111;
 }
-`, mn = `
+`, hn = `
 {
   int w = int(1.0 / uTexel.x + 0.5);
   ivec2 px = ivec2(vUv / uTexel);
@@ -1593,7 +1593,7 @@ vec3 ceInterp(sampler2D lut, int w, int level, vec3 n, int mode) {
     c = (i - 2 * a) == 0 ? p : vec3(q.x - p.x, scale, ceWrapPi(shift));
   }
 }
-`, hn = `
+`, gn = `
 {
   int w = int(1.0 / uTexel.x + 0.5);
   int hgt = int(1.0 / uTexel.y + 0.5);
@@ -1667,15 +1667,15 @@ vec3 ceInterp(sampler2D lut, int w, int level, vec3 n, int mode) {
   }
 }
 `;
-function gn(e) {
+function _n(e) {
 	return `
 {
   if (on > 0.5) {
     ivec2 sz = textureSize(${e}, 0);
     int level = ceLutLevel(sz.x * sz.y);
     if (ceMarked(${e}, sz.x, level)) {
-      const mat3 toRec2020 = ${rn(m)};
-      const mat3 toSrgb = ${rn(h)};
+      const mat3 toRec2020 = ${an(m)};
+      const mat3 toSrgb = ${an(h)};
       float white = exp2(whiteLevel);
       vec3 e = ceHlgOetf(toRec2020 * (lin / white));
       vec3 n = clamp(e, 0.0, 1.0);
@@ -1685,10 +1685,10 @@ function gn(e) {
 }
 `;
 }
-function _n(e) {
+function vn(e) {
 	return `u_${it(e)}_stageResult`;
 }
-function vn() {
+function yn() {
 	let e = [], { chunks: t } = ut(Ae());
 	for (let n of R) for (let r of M) {
 		let i = `${n}${ot[r]}`;
@@ -1705,19 +1705,19 @@ function vn() {
 	}
 	return e;
 }
-function yn() {
-	return {
-		glsl: mn,
-		helpers: `${on}\n${cn}\n${fn}`,
-		iterations: 1,
-		uniforms: vn()
-	};
-}
-var $ = V;
 function bn() {
 	return {
 		glsl: hn,
-		helpers: `${on}\n${pn}`,
+		helpers: `${sn}\n${ln}\n${pn}`,
+		iterations: 1,
+		uniforms: yn()
+	};
+}
+var $ = V;
+function xn() {
+	return {
+		glsl: gn,
+		helpers: `${sn}\n${mn}`,
 		iterations: 1,
 		uniforms: [
 			{
@@ -1767,14 +1767,14 @@ function bn() {
 		]
 	};
 }
-function xn() {
+function Sn() {
 	return {
 		id: H,
 		name: "Colour Equaliser",
 		phase: "scene-linear",
 		priority: 85,
-		glsl: gn(_n(H)),
-		helpers: `${on}\n${pn}`,
+		glsl: _n(vn(H)),
+		helpers: `${sn}\n${mn}`,
 		uniforms: [
 			{
 				key: "whiteLevel",
@@ -1804,55 +1804,60 @@ function xn() {
 				default: 0
 			}
 		],
-		passes: [yn(), bn()],
-		presetScope: "global"
+		passes: [bn(), xn()],
+		presetScope: "global",
+		mask: { maskable: !0 }
 	};
 }
-function Sn() {
-	return [xn()];
+function Cn() {
+	return [Sn()];
 }
 //#endregion
 //#region src/index.ts
-var Cn = `${rt}.panel`, wn = `${rt}.overlay`, Tn = null;
-function En() {
+var wn = `${rt}.panel`, Tn = `${rt}.overlay`, En = null;
+function Dn() {
 	let e = q().stores.useDevelopStore.getState();
 	e.setDynParams(ht()), e.commitEdit("Colour Equaliser reset");
 }
-function Dn(e) {
+function On(e) {
 	vt(e), bt();
-	for (let t of Sn()) e.registerProcessingStage(t);
+	for (let t of Cn()) e.registerProcessingStage(t);
 	e.registerPanel({
-		id: Cn,
+		id: wn,
 		title: "Colour Equaliser",
-		component: Wt,
+		component: Gt,
 		defaultDock: {
 			module: "develop",
 			direction: "right",
 			order: 7,
 			width: 268
 		},
-		onReset: En
+		onReset: Dn,
+		mask: {
+			component: Gt,
+			owns: [...lt(), ...Object.values(U)]
+		}
 	}), e.registerSlot({
-		id: wn,
+		id: Tn,
 		slot: "develop-canvas-overlay",
-		component: Qt,
+		component: $t,
 		order: 60
-	}), Tn = e.stores.useDevelopStore.subscribe((e, t) => {
+	}), En = e.stores.useDevelopStore.subscribe((e, t) => {
 		if (e.paramBag === t.paramBag) return;
 		let n = gt(e.paramBag);
 		n && e.setDynParams(n);
 	});
 }
-function On() {
-	Tn?.(), Tn = null;
+function kn() {
+	En?.(), En = null;
 	try {
 		Y().getState().setMode(null);
 		let e = q();
-		for (let t of Sn()) e.unregisterProcessingStage(t.id);
-		e.unregisterSlot(wn);
+		for (let t of Cn()) e.unregisterProcessingStage(t.id);
+		e.unregisterSlot(Tn);
 	} catch {}
 }
 //#endregion
-export { Dn as activate, On as deactivate };
+export { On as activate, kn as deactivate };
 
 //# sourceMappingURL=index.js.map

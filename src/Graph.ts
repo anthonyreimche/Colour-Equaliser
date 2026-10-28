@@ -5,7 +5,9 @@
 // Hover selects the node within 10 px; drag moves it, Ctrl+click adds one on
 // the curve, right-click removes the selected one, double-click resets the
 // curve. Drags write the bag live and commit on release; the rest commit at
-// once.
+// once. It edits the scope it is handed, the photo's or a mask's; a mask's
+// graph leaves out the picker and cursor marks, which read the photo for its
+// own equaliser.
 //
 // The plot sits on the panel's themed surface; canvas strokes cannot
 // reference CSS variables, so the ink is derived from the resolved surface
@@ -217,10 +219,11 @@ export interface GraphProps {
 
 export function EqualiserGraph({ ring, channel }: GraphProps) {
   const { useEffect, useRef, useState } = api().react;
-  const dev = api().stores.useDevelopStore;
-  const paramBag = dev((s) => s.paramBag);
-  const cursor = store()((s) => s.cursor);
-  const picker = store()((s) => s.picker);
+  const scope = api().develop.useParamScope();
+  const inMask = scope.maskId !== null;
+  const paramBag = scope.getParams();
+  const cursor = store()((s) => (inMask ? null : s.cursor));
+  const picker = store()((s) => (inMask ? null : s.picker));
   const nodes = readParams(paramBag).curves[ring][channel];
 
   const [width, setWidth] = useState(FRAME_WIDTH);
@@ -278,14 +281,12 @@ export function EqualiserGraph({ ring, channel }: GraphProps) {
     });
   }, [paramBag, ring, channel, selected, width, cursor, picker, epoch]);
 
-  const live = () => readParams(dev.getState().paramBag);
+  const live = () => readParams(scope.getParams());
   const write = (next: readonly CurveNode[]) => {
     const p = live();
-    dev.getState().setDynParams(
-      deriveAll({ ...p, curves: { ...p.curves, [ring]: { ...p.curves[ring], [channel]: next } } }),
-    );
+    scope.setParams(deriveAll({ ...p, curves: { ...p.curves, [ring]: { ...p.curves[ring], [channel]: next } } }));
   };
-  const commit = (what: string) => void dev.getState().commitEdit(`Colour Equaliser ${what}`);
+  const commit = (what: string) => scope.commit(`Colour Equaliser ${what}`);
 
   const canvasPoint = (e: { clientX: number; clientY: number; currentTarget: HTMLCanvasElement }) => {
     const r = e.currentTarget.getBoundingClientRect();
