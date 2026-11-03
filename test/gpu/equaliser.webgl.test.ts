@@ -23,18 +23,20 @@ import { lutLevel } from "@ceq/field";
 import { DEFAULT_PARAMS, defaultCurves, equaliseWith, type Params } from "@ceq/model";
 import { deriveAll } from "@ceq/params";
 import { allStages } from "@ceq/stage";
-import { hsvToRgb } from "@ceq/ucs";
+import { REC2020_TO_SRGB, SRGB_TO_REC2020, apply3, hsvToRgb } from "@ceq/ucs";
 import { paramsFromReference } from "@ceq-test/support/reference-params";
 import { V } from "@ceq-test/support/vectors";
 import {
   LINEAR_PROBE_PIPELINE,
+  OPEN_PROBE,
   type Frame,
   builtinStages,
   floatImage,
   identityParams,
   withRenderer,
 } from "@/rendering/webgl/webgl.test-support";
-import { defaultMaskAdjustments, type Mask } from "@/catalog/types";
+import { CURRENT_PROCESS_VERSION, defaultMaskAdjustments, type Mask } from "@/catalog/types";
+import type { ProcessingStageContribution } from "@/extensions/types";
 
 // ── Scenes ───────────────────────────────────────────────────────────────────
 
@@ -56,6 +58,28 @@ function sweepScene(w: number, h: number): Float64Array {
     }
   }
   return img;
+}
+
+/** Channels past white and colours outside sRGB, with strongly negative
+ *  channels, by quarter, and a grey ramp. */
+function wideScene(w: number, h: number): Float64Array {
+  const wide = new Float64Array(w * h * 3);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const u = x / (w - 1);
+      const v = y / (h - 1);
+      const rgb =
+        y < h / 4
+          ? [0.5 + 3.5 * u, 0.3 + 2.2 * u, 0.2 + 1.4 * u]
+          : y < h / 2
+            ? [0.2 + 1.2 * u, -0.05 - 0.45 * v, 0.1 + 0.9 * u]
+            : y < (3 * h) / 4
+              ? [-0.2 - 0.3 * u, 0.4 + 0.8 * v, -0.1 - 0.4 * v]
+              : [0.05 + 0.8 * u, 0.05 + 0.8 * u, 0.05 + 0.8 * u];
+      wide.set(rgb, (y * w + x) * 3);
+    }
+  }
+  return wide;
 }
 
 /** float32 → binary16 → float32, round to nearest even: the source upload is
@@ -276,6 +300,161 @@ describe("Colour Equaliser stage on the real renderer", () => {
     expect(s.changeRms).toBeGreaterThan(1e-3);
     expect(s.outliers).toBe(0);
     expect(s.rmse).toBeLessThan(Math.max(s.changeRms * MAX_ERROR_FRACTION, MAX_ERROR_FLOOR));
+  });
+
+  // On process version 2 nothing upstream clips, so the stage sees channels
+  // past white and below zero. The scene capture is `lin` as the display
+  // transform receives it, signed. A stage at the same phase and priority that
+  // floors `lin` at zero is the positive control: it must change the capture,
+  // or the scene doesn't reach the stage signed and the test proves nothing.
+  // A curve bent by a hair turns the stage on with a table that moves nothing.
+  it("passes values outside [0, 1] through on version 2, and moves them as Ansel's table does", () => {
+    const w = 96;
+    const h = 64;
+    const level = lutLevel(w * h);
+    const wide = wideScene(w, h);
+    const image = toImage(wide, w, h);
+    const floorsAhead: ProcessingStageContribution = {
+      id: "test.floors-ahead",
+      name: "Floors ahead",
+      phase: "scene-linear",
+      priority: 85,
+      glsl: "lin = max(lin, 0.0);",
+      uniforms: [],
+    };
+    const scene = (stages: ProcessingStageContribution[], bags: Record<string, unknown>[]): Frame[] =>
+      withRenderer({ stages: [...builtinStages(), ...stages], pipeline: OPEN_PROBE }, (r) => {
+        r.setImage(image);
+        r.setParams(identityParams({ processVersion: CURRENT_PROCESS_VERSION }));
+        return bags.map((bag) => {
+          r.setContributedParams(bag);
+          r.render();
+          const f = r.readFloatFrame("scene");
+          if (!f) throw new Error("readFloatFrame returned null");
+          return f;
+        });
+      });
+    const [bare] = scene([], [{}]);
+    const [floored] = scene([floorsAhead], [{}]);
+    let moved = 0;
+    for (let i = 0; i < bare.data.length; i++) if (bare.data[i] !== floored.data[i]) moved++;
+    expect(moved).toBeGreaterThan(w * h * 0.1);
+
+    const curves = defaultCurves();
+    const hair: Params = {
+      ...DEFAULT_PARAMS,
+      curves: { ...curves, highlights: { ...curves.highlights, saturation: curves.highlights.saturation.map((n, k) => (k === 0 ? { ...n, y: 0.5001 } : n)) } },
+    };
+    const [off, untouched, edited] = scene(allStages(), [deriveAll(DEFAULT_PARAMS), deriveAll(hair), deriveAll(A)]);
+    let worst = 0;
+    let negatives = 0;
+    for (let p = 0; p < w * h; p++) {
+      for (let ch = 0; ch < 3; ch++) {
+        const want = bare.data[p * 4 + ch];
+        worst = Math.max(worst, Math.abs(untouched.data[p * 4 + ch] - want) / Math.max(1, Math.abs(want)));
+        if (want < -0.01) negatives++;
+      }
+    }
+    console.log(`[ceq-gpu] over range, curve bent by a hair: worst relative change ${worst.toExponential(2)}, ${negatives} values below zero`);
+    expect(negatives).toBeGreaterThan(w * h * 0.5);
+    expect(worst).toBeLessThan(1e-3);
+
+    // The reference starts from the frame with the stage idle, which is what
+    // the stage receives: at the quarters' edges the captured rows sit far from
+    // the scene as written, so a reference from the source misses them.
+    const apply = equaliseWith(A, level);
+    const pixel = (f: Frame, p: number): [number, number, number] => [f.data[p * 4], f.data[p * 4 + 1], f.data[p * 4 + 2]];
+    let se = 0;
+    let change = 0;
+    let kept = 0;
+    let max = 0;
+    let worstAt = "";
+    let fromSource = 0;
+    for (let p = 0; p < w * h; p++) {
+      const input = pixel(off, p);
+      const ref = apply(input);
+      for (let ch = 0; ch < 3; ch++) {
+        const got = edited.data[p * 4 + ch];
+        const e = got - ref[ch];
+        se += e * e;
+        change += (ref[ch] - input[ch]) ** 2;
+        fromSource = Math.max(fromSource, Math.abs(input[ch] - wide[p * 3 + ch]));
+        if (got < -0.01) kept++;
+        if (Math.abs(e) > max) {
+          max = Math.abs(e);
+          worstAt = `x=${p % w} y=${Math.floor(p / w)} ch=${ch} in=${input[ch].toFixed(4)} ref=${ref[ch].toFixed(4)} gpu=${got.toFixed(4)}`;
+        }
+      }
+    }
+    const rmse = Math.sqrt(se / (w * h * 3));
+    const changeRms = Math.sqrt(change / (w * h * 3));
+    console.log(
+      `[ceq-gpu] over range, ${CASES[0][0]}: change rms ${changeRms.toExponential(2)}; error rms ${rmse.toExponential(2)} ` +
+        `(${((100 * rmse) / changeRms).toFixed(2)}%), max ${max.toExponential(2)}, ${kept} values below zero, ` +
+        `idle frame up to ${fromSource.toExponential(2)} from the source; worst ${worstAt}`,
+    );
+    expect(changeRms).toBeGreaterThan(1e-3);
+    expect(kept).toBeGreaterThan(w * h * 0.5);
+    expect(rmse).toBeLessThan(Math.max(changeRms * MAX_ERROR_FRACTION, MAX_ERROR_FLOOR));
+  });
+
+  // Version 1 photos keep the look they were edited with: HLG floors each
+  // Rec2020 channel's part below black and nothing adds it back. The input is
+  // the frame with the stage idle, what reaches the stage on version 1. The
+  // control: flooring must move a tenth of the values, or the scene can't
+  // tell the versions apart.
+  it("floors the part below black on version 1, as those edits were made", () => {
+    const w = 96;
+    const h = 64;
+    const level = lutLevel(w * h);
+    const image = toImage(wideScene(w, h), w, h);
+    const curves = defaultCurves();
+    const hair: Params = {
+      ...DEFAULT_PARAMS,
+      curves: { ...curves, highlights: { ...curves.highlights, saturation: curves.highlights.saturation.map((n, k) => (k === 0 ? { ...n, y: 0.5001 } : n)) } },
+    };
+    const [off, untouched, edited] = withRenderer({ stages: [...builtinStages(), ...allStages()], pipeline: OPEN_PROBE }, (r) => {
+      r.setImage(image);
+      r.setParams(identityParams({ processVersion: 1 }));
+      return [deriveAll(DEFAULT_PARAMS), deriveAll(hair), deriveAll(A)].map((bag) => {
+        r.setContributedParams(bag);
+        r.render();
+        const f = r.readFloatFrame("scene");
+        if (!f) throw new Error("readFloatFrame returned null");
+        return f;
+      });
+    });
+    const pixel = (f: Frame, p: number): [number, number, number] => [f.data[p * 4], f.data[p * 4 + 1], f.data[p * 4 + 2]];
+    const floor = (rgb: [number, number, number]) => {
+      const r = apply3(SRGB_TO_REC2020, rgb);
+      return apply3(REC2020_TO_SRGB, [Math.max(r[0], 0), Math.max(r[1], 0), Math.max(r[2], 0)]);
+    };
+    const apply = equaliseWith(A, level, 1);
+    let floored = 0;
+    let worst = 0;
+    let se = 0;
+    let change = 0;
+    for (let p = 0; p < w * h; p++) {
+      const input = pixel(off, p);
+      const want = floor(input);
+      const ref = apply(input);
+      for (let ch = 0; ch < 3; ch++) {
+        if (Math.abs(want[ch] - input[ch]) > 0.01) floored++;
+        worst = Math.max(worst, Math.abs(untouched.data[p * 4 + ch] - want[ch]) / Math.max(1, Math.abs(want[ch])));
+        se += (edited.data[p * 4 + ch] - ref[ch]) ** 2;
+        change += (ref[ch] - input[ch]) ** 2;
+      }
+    }
+    const rmse = Math.sqrt(se / (w * h * 3));
+    const changeRms = Math.sqrt(change / (w * h * 3));
+    console.log(
+      `[ceq-gpu] version 1: ${floored} values floored; curve bent by a hair, worst relative error ${worst.toExponential(2)}; ` +
+        `${CASES[0][0]}, change rms ${changeRms.toExponential(2)}, error rms ${rmse.toExponential(2)}`,
+    );
+    expect(floored).toBeGreaterThan(w * h * 0.3);
+    expect(worst).toBeLessThan(1e-3);
+    expect(changeRms).toBeGreaterThan(1e-3);
+    expect(rmse).toBeLessThan(Math.max(changeRms * MAX_ERROR_FRACTION, MAX_ERROR_FLOOR));
   });
 
   it("applies a mask's curves inside the mask, and the photo's everywhere else", () => {

@@ -411,7 +411,9 @@ export const LATTICE_GLSL = `
 
 /** The inline block for the host's result sampler `sampler`: white level,
  *  HLG Rec2020 code values, the displacement lookup with the excess beyond
- *  the cube kept, and back. */
+ *  the cube kept, and back. HLG has no code below black, so a channel's part
+ *  below zero skips the table and is added back in linear; process version 1
+ *  floors it, the look those edits were made with. */
 export function inlineGlsl(sampler: string): string {
   return `
 {
@@ -422,9 +424,16 @@ export function inlineGlsl(sampler: string): string {
       const mat3 toRec2020 = ${mat3(SRGB_TO_REC2020)};
       const mat3 toSrgb = ${mat3(REC2020_TO_SRGB)};
       float white = exp2(whiteLevel);
+#if SL_PROCESS_VERSION >= 2
+      vec3 E = toRec2020 * (lin / white);
+      vec3 e = ceHlgOetf(E);
+      vec3 n = clamp(e, 0.0, 1.0);
+      lin = white * (toSrgb * (ceHlgEotf(n + ceInterp(${sampler}, sz.x, level, n, interpolation) + (e - n)) + min(E, 0.0)));
+#else
       vec3 e = ceHlgOetf(toRec2020 * (lin / white));
       vec3 n = clamp(e, 0.0, 1.0);
       lin = white * (toSrgb * ceHlgEotf(n + ceInterp(${sampler}, sz.x, level, n, interpolation) + (e - n)));
+#endif
     }
   }
 }

@@ -7,6 +7,7 @@ import { CHANNELS } from "../src/curve";
 import { lutLevel } from "../src/field";
 import { DEFAULT_PARAMS, buildTable, defaultCurves, effectActive, equalisePixel, equaliseWith, fieldParams } from "../src/model";
 import { RINGS } from "../src/rings";
+import { REC2020_TO_SRGB, SRGB_TO_REC2020, apply3 } from "../src/ucs";
 import { paramsFromReference } from "./support/reference-params";
 import { V } from "./support/vectors";
 
@@ -53,6 +54,27 @@ describe("equalisePixel", () => {
   it("is exactly the identity at the defaults", () => {
     const apply = equaliseWith(DEFAULT_PARAMS, 16);
     for (const v of [[0.3, 0.2, 0.7], [1.4, 0.9, 0.1], [0, 0, 0]] as const) expect(apply(v)).toEqual([...v]);
+  });
+
+  // Ansel's table takes code values in [0, 1] and keeps the excess above 1;
+  // the part below black must come back too, as it went in.
+  it("passes a signed pixel through an untouched table unchanged", () => {
+    const table = buildTable(DEFAULT_PARAMS, 16);
+    for (const rgb of [[-0.2, 0.6, -0.1], [0.9, -0.05, 1.3], [-0.3, -0.1, 0.05], [3.5, 2.2, 1.4]] as const) {
+      const out = equalisePixel(rgb, table, 16, DEFAULT_PARAMS.whiteLevel, DEFAULT_PARAMS.interpolation);
+      for (let c = 0; c < 3; c++) expect(out[c]).toBeCloseTo(rgb[c], 6);
+    }
+  });
+
+  it("floors a version 1 pixel's part below black in Rec2020, as those edits were made", () => {
+    const table = buildTable(DEFAULT_PARAMS, 16);
+    for (const rgb of [[-0.2, 0.6, -0.1], [-0.3, -0.1, 0.05], [0.4, -0.3, 0.2]] as const) {
+      const r = apply3(SRGB_TO_REC2020, rgb);
+      const floored = apply3(REC2020_TO_SRGB, [Math.max(r[0], 0), Math.max(r[1], 0), Math.max(r[2], 0)]);
+      const out = equalisePixel(rgb, table, 16, DEFAULT_PARAMS.whiteLevel, DEFAULT_PARAMS.interpolation, 1);
+      for (let c = 0; c < 3; c++) expect(out[c]).toBeCloseTo(floored[c], 6);
+      expect(floored.some((v, c) => Math.abs(v - rgb[c]) > 1e-3)).toBe(true);
+    }
   });
 
   it("reproduces Ansel's process() for every reference pixel", () => {

@@ -21,6 +21,7 @@ import {
 } from "../src/stage";
 import { CAT16_D65_TO_D50, HLG, L_WHITE } from "../src/ucs";
 import { fetchBudget, inlineFetches } from "./support/fetch-budget";
+import { atVersion } from "./support/process-version";
 
 const unqualified = (k: string) => k.slice(STAGE_ID.length + 1);
 
@@ -110,6 +111,19 @@ describe("ringsStage", () => {
     expect(MARKER).toEqual([-1, 0.5, -1]);
     expect(anchors.glsl).toContain("384");
     expect(lattice.glsl).toContain(`vec3(${glslLiteral(-1)}, ${glslLiteral(0.5)}, ${glslLiteral(-1)})`);
+  });
+
+  // Version 1 edits keep the look they were made with: HLG floors a channel's
+  // part below black, and nothing adds it back.
+  it("adds the part below black back from version 2 only", () => {
+    const sampler = resultSampler(STAGE_ID);
+    const v1 = atVersion(stage.glsl, 1);
+    expect(v1).toContain("vec3 e = ceHlgOetf(toRec2020 * (lin / white));");
+    expect(v1).toContain(`lin = white * (toSrgb * ceHlgEotf(n + ceInterp(${sampler}, sz.x, level, n, interpolation) + (e - n)));`);
+    expect(v1).not.toContain("min(E, 0.0)");
+    const v2 = atVersion(stage.glsl, 2);
+    expect(v2).toContain(`lin = white * (toSrgb * (ceHlgEotf(n + ceInterp(${sampler}, sz.x, level, n, interpolation) + (e - n)) + min(E, 0.0)));`);
+    expect(atVersion(stage.glsl, 3)).toBe(v2);
   });
 
   it("stays within the per-draw texture-fetch budgets", () => {

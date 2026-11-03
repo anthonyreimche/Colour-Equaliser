@@ -74,25 +74,34 @@ export function buildTable(p: Params, level: number): Float32Array {
   return fillDisplacementTable(level, allAnchors(p.curves), fieldParams(p));
 }
 
-/** process() for one scene-linear sRGB pixel. */
+/** process() for one scene-linear sRGB pixel. HLG has no code below black,
+ *  so a channel's part below zero skips the table and is added back in
+ *  linear, as the excess above 1 is kept past the cube. Process version 1
+ *  floors it, the look those edits were made with. */
 export function equalisePixel(
   rgb: Vec3,
   table: Float32Array,
   level: number,
   whiteLevelEv: number,
   mode: Interpolation,
+  processVersion = 2,
 ): Vec3 {
   const white = Math.max(Math.pow(2, whiteLevelEv), 1e-6);
   const lin = apply3(SRGB_TO_REC2020, [rgb[0] / white, rgb[1] / white, rgb[2] / white]);
   const code = applyDisplacementTable([hlgOetf(lin[0]), hlgOetf(lin[1]), hlgOetf(lin[2])], table, level, mode);
-  const out = apply3(REC2020_TO_SRGB, [hlgEotf(code[0]), hlgEotf(code[1]), hlgEotf(code[2])]);
+  const below = (c: number) => (processVersion >= 2 ? Math.min(lin[c], 0) : 0);
+  const out = apply3(REC2020_TO_SRGB, [
+    hlgEotf(code[0]) + below(0),
+    hlgEotf(code[1]) + below(1),
+    hlgEotf(code[2]) + below(2),
+  ]);
   return [out[0] * white, out[1] * white, out[2] * white];
 }
 
 /** The transform for a parameter set: the identity while nothing is edited,
  *  else the table built once and applied per pixel. */
-export function equaliseWith(p: Params, level: number): (rgb: Vec3) => Vec3 {
+export function equaliseWith(p: Params, level: number, processVersion = 2): (rgb: Vec3) => Vec3 {
   if (!effectActive(p)) return (rgb) => [rgb[0], rgb[1], rgb[2]];
   const table = buildTable(p, level);
-  return (rgb) => equalisePixel(rgb, table, level, p.whiteLevel, p.interpolation);
+  return (rgb) => equalisePixel(rgb, table, level, p.whiteLevel, p.interpolation, processVersion);
 }

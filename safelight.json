@@ -8,5 +8,5 @@
   "license": "GPL-3.0-or-later",
   "categories": ["Develop", "Color"],
   "keywords": ["ansel", "darktable", "colour-equaliser", "color-equalizer", "color-zones", "hue", "saturation", "brightness", "rings", "lut", "ucs"],
-  "minAppVersion": "3.1.0"
+  "minAppVersion": "3.2.0"
 }

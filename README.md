@@ -135,7 +135,10 @@ Differences from Ansel to be aware of:
 - The HLG curves are analytic in both directions. Ansel evaluates a
   4096-point table on [0, 1] with a power-law fit above 1, so the two agree to
   about 1e-5 in code values inside the range and differ only for pixels
-  brighter than the white level. Below black both clip to 0.
+  brighter than the white level. HLG has no code below black: Ansel clips a
+  Rec2020 channel there to 0, while the port passes the part below zero
+  around the table and adds it back in linear. Photos on process version 1
+  keep Ansel's clip, the look they were edited with.
 - Ansel's hue-shift path divides 0/0 when a brightness curve reaches exactly
   zero; the port maps that to black instead. Ansel also lets a node be added
   within 0.01 of the first node across the wrap (and exactly on it at x = 1),
@@ -182,7 +185,7 @@ with its dev dependencies installed.
 Install from the SafeLight **Extensions** window, or load this folder via
 Developer Tools ▸ Extensions during development. A **Colour Equaliser** panel
 appears in Develop (right dock). Build from source with `npm install && npm run
-build` (outputs `dist/index.js`). Needs SafeLight 3.1.0 or later.
+build` (outputs `dist/index.js`). Needs SafeLight 3.2.0 or later.
 
 ## License & credits
 
