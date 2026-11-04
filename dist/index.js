@@ -1677,9 +1677,16 @@ function _n(e) {
       const mat3 toRec2020 = ${an(m)};
       const mat3 toSrgb = ${an(h)};
       float white = exp2(whiteLevel);
+#if SL_PROCESS_VERSION >= 2
+      vec3 E = toRec2020 * (lin / white);
+      vec3 e = ceHlgOetf(E);
+      vec3 n = clamp(e, 0.0, 1.0);
+      lin = white * (toSrgb * (ceHlgEotf(n + ceInterp(${e}, sz.x, level, n, interpolation) + (e - n)) + min(E, 0.0)));
+#else
       vec3 e = ceHlgOetf(toRec2020 * (lin / white));
       vec3 n = clamp(e, 0.0, 1.0);
       lin = white * (toSrgb * ceHlgEotf(n + ceInterp(${e}, sz.x, level, n, interpolation) + (e - n)));
+#endif
     }
   }
 }

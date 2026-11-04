@@ -1,7 +1,7 @@
 {
   "id": "colour-equaliser",
   "name": "Colour Equaliser",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A port of Ansel's colour equalizer — shape saturation, brightness and hue per hue on three brightness rings (shadows, midtones, highlights), applied through an HLG Rec2020 colour lookup table with Ansel's smoothing and neutral protection.",
   "author": "Anthony Reimche",
   "main": "dist/index.js",
