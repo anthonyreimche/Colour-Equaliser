@@ -6,7 +6,7 @@
 // reference never sees.
 
 import { describe, expect, it } from "vitest";
-import { glslLiteral } from "../src/glsl";
+import { LATTICE_GLSL, LUT_GLSL, glslLiteral, inlineGlsl } from "../src/glsl";
 import { CHUNKS, KEY, STAGE_ID, curveKeys, stagePrefix4 } from "../src/params";
 import { REFERENCE_SATURATION } from "../src/rings";
 import {
@@ -132,5 +132,29 @@ describe("ringsStage", () => {
     expect(perLattice).toBeLessThanOrEqual(385);
     expect(perLattice).toBeGreaterThan(192);
     expect(inlineFetches(stage.glsl, stage.helpers ?? "")).toBeLessThanOrEqual(20);
+  });
+});
+
+// Mesa radeonsi runs mediump as 16-bit (ints wrap past 32767), and the host
+// declares only `precision highp float`, so every index into the table (up to
+// 64³ texels) and every frame texel count must be spelled highp.
+const mediumpInts = (src: string): string[] =>
+  [...src.matchAll(/(?<!highp )\b(?:int|ivec[234])\s+(\w+)/g)].map((m) => m[1]);
+
+describe("integer precision", () => {
+  it("keeps every table index highp in the shared lookup helpers", () => {
+    expect(mediumpInts(LUT_GLSL)).toEqual(["k", "mode"]);
+  });
+
+  it("keeps the lattice pass's texel and level maths highp", () => {
+    expect(mediumpInts(LATTICE_GLSL)).toEqual(["a", "t0", "t1", "s"]);
+  });
+
+  it("keeps the inline's level and texture size highp", () => {
+    expect(mediumpInts(inlineGlsl("sampler"))).toEqual([]);
+  });
+
+  it("raises the anchors pass's default int precision", () => {
+    expect(anchorsPass().helpers?.startsWith("precision highp int;")).toBe(true);
   });
 });

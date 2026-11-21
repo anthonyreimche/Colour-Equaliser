@@ -243,25 +243,25 @@ float ceSample(int curve, float x) {
 
 export const LUT_GLSL = `
 // The largest level <= ${MAX_LUT_LEVEL} whose cube fits the target's texels, never below 2.
-int ceLutLevel(int texels) {
-  int l = min(${MAX_LUT_LEVEL}, int(floor(pow(float(texels), 1.0 / 3.0))) + 1);
+highp int ceLutLevel(highp int texels) {
+  highp int l = min(${MAX_LUT_LEVEL}, int(floor(pow(float(texels), 1.0 / 3.0))) + 1);
   for (int k = 0; k < 3; k++) {
     if (l * l * l > texels) l--;
   }
   return max(2, l);
 }
-vec3 ceTexel(sampler2D lut, int w, int i) { return texelFetch(lut, ivec2(i - w * (i / w), i / w), 0).rgb; }
-bool ceMarked(sampler2D lut, int w, int level) {
+vec3 ceTexel(sampler2D lut, highp int w, highp int i) { return texelFetch(lut, ivec2(i - w * (i / w), i / w), 0).rgb; }
+bool ceMarked(sampler2D lut, highp int w, highp int level) {
   return all(equal(ceTexel(lut, w, level * level * level), vec3(${lit(-1)}, ${lit(0.5)}, ${lit(-1)})));
 }
 // lut3d.c over the displacement table: n in [0, 1]^3, the eight corners read
 // once, then tetrahedral (mode 0), trilinear (1) or pyramid (2).
-vec3 ceInterp(sampler2D lut, int w, int level, vec3 n, int mode) {
+vec3 ceInterp(sampler2D lut, highp int w, highp int level, vec3 n, int mode) {
   vec3 scaled = n * float(level - 1);
-  ivec3 idx = clamp(ivec3(scaled), ivec3(0), ivec3(level - 2));
+  highp ivec3 idx = clamp(ivec3(scaled), ivec3(0), ivec3(level - 2));
   vec3 f = scaled - vec3(idx);
-  int level2 = level * level;
-  int color = idx.x + idx.y * level + idx.z * level2;
+  highp int level2 = level * level;
+  highp int color = idx.x + idx.y * level + idx.z * level2;
   vec3 c000 = ceTexel(lut, w, color);
   vec3 c100 = ceTexel(lut, w, color + 1);
   vec3 c010 = ceTexel(lut, w, color + level);
@@ -302,9 +302,9 @@ vec3 ceInterp(sampler2D lut, int w, int level, vec3 n, int mode) {
  *  deltaTheta). Anchor a = texel / 2, ring a / 64, hue sample a mod 64. */
 export const ANCHORS_GLSL = `
 {
-  int w = int(1.0 / uTexel.x + 0.5);
-  ivec2 px = ivec2(vUv / uTexel);
-  int i = px.y * w + px.x;
+  highp int w = int(1.0 / uTexel.x + 0.5);
+  highp ivec2 px = ivec2(vUv / uTexel);
+  highp int i = px.y * w + px.x;
   if (i >= ${3 * HUE_SAMPLES * 2}) {
     c = vec3(0.0);
   } else {
@@ -336,20 +336,20 @@ export const ANCHORS_GLSL = `
  *  inside the ellipsoid; the achromatic ring is analytic. */
 export const LATTICE_GLSL = `
 {
-  int w = int(1.0 / uTexel.x + 0.5);
-  int hgt = int(1.0 / uTexel.y + 0.5);
-  int level = ceLutLevel(w * hgt);
-  int n3 = level * level * level;
-  ivec2 px = ivec2(vUv / uTexel);
-  int i = px.y * w + px.x;
+  highp int w = int(1.0 / uTexel.x + 0.5);
+  highp int hgt = int(1.0 / uTexel.y + 0.5);
+  highp int level = ceLutLevel(w * hgt);
+  highp int n3 = level * level * level;
+  highp ivec2 px = ivec2(vUv / uTexel);
+  highp int i = px.y * w + px.x;
   if (i == n3) {
     c = vec3(${lit(-1)}, ${lit(0.5)}, ${lit(-1)});
   } else if (i > n3) {
     c = vec3(0.0);
   } else {
-    int r = i - level * (i / level);
-    int g = (i / level) - level * (i / (level * level));
-    int b = i / (level * level);
+    highp int r = i - level * (i / level);
+    highp int g = (i / level) - level * (i / (level * level));
+    highp int b = i / (level * level);
     vec3 x = vec3(r, g, b) / float(level - 1);
     vec3 cyl = ceGrayCyl(x);
     vec3 d = vec3(0.0);
@@ -418,8 +418,8 @@ export function inlineGlsl(sampler: string): string {
   return `
 {
   if (on > 0.5) {
-    ivec2 sz = textureSize(${sampler}, 0);
-    int level = ceLutLevel(sz.x * sz.y);
+    highp ivec2 sz = textureSize(${sampler}, 0);
+    highp int level = ceLutLevel(sz.x * sz.y);
     if (ceMarked(${sampler}, sz.x, level)) {
       const mat3 toRec2020 = ${mat3(SRGB_TO_REC2020)};
       const mat3 toSrgb = ${mat3(REC2020_TO_SRGB)};

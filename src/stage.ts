@@ -54,7 +54,11 @@ function curveUniforms(): UniformDeclaration[] {
 export function anchorsPass(): StagePass {
   return {
     glsl: ANCHORS_GLSL,
-    helpers: `${COLOUR_GLSL}\n${RING_GLSL}\n${CURVE_GLSL}`,
+    // Radeonsi runs mediump ints as 16-bit; the texel index i reaches millions.
+    helpers: `precision highp int;
+${COLOUR_GLSL}
+${RING_GLSL}
+${CURVE_GLSL}`,
     iterations: 1,
     uniforms: curveUniforms(),
   };
