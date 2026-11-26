@@ -110,19 +110,19 @@ var f = d(s, c), p = n(f), m = t(p, r), h = t(i, f), g = {
 function _(e) {
 	return e <= 0 ? 0 : e <= 1 / 12 ? Math.sqrt(3 * e) : g.a * Math.log(12 * e - g.b) + g.c;
 }
-var v = 2.098883786377, y = .631651345306265, b = 1.12426773749357, x = 1.5831518565279648, S = 15.932993652962535, C = .6523997524738018, w = .6007557017508491, T = .8322850678616855, ee = 1.33654221029386, te = [
+var v = 2.098883786377, y = .631651345306265, b = 1.12426773749357, x = 1.5831518565279648, S = 15.932993652962535, C = .6523997524738018, w = .6007557017508491, T = .8322850678616855, E = 1.33654221029386, ee = [
 	-.783941002840055,
 	.745273540913283,
 	.318707282433486
-], ne = [
+], te = [
 	.277512987809202,
 	-.205375866083878,
 	2.16743692732158
-], re = [
+], ne = [
 	.153836578598858,
 	-.165478376301988,
 	.291320554395942
-], E = [1.39656225667, 1.4513954287], D = [1.49217352929, 1.52488637914], O = [
+], D = [1.39656225667, 1.4513954287], O = [1.49217352929, 1.52488637914], re = [
 	-1.124983854323892,
 	-.980483721769325,
 	1.86323315098672,
@@ -182,8 +182,8 @@ function me(e) {
 		0,
 		0
 	];
-	for (let n = 0; n < 3; n++) t[n] = te[n] * e[0] + ne[n] * e[1] + re[n];
-	let n = pe(t[2]), r = t[0] / n, i = t[1] / n, a = E[0] * r / (Math.abs(r) + D[0]), o = E[1] * i / (Math.abs(i) + D[1]), s = O[0] * a + O[1] * o, c = O[2] * a + O[3] * o, l = le(e[2]), u = s * s + c * c;
+	for (let n = 0; n < 3; n++) t[n] = ee[n] * e[0] + te[n] * e[1] + ne[n];
+	let n = pe(t[2]), r = t[0] / n, i = t[1] / n, a = D[0] * r / (Math.abs(r) + O[0]), o = D[1] * i / (Math.abs(i) + O[1]), s = re[0] * a + re[1] * o, c = re[2] * a + re[3] * o, l = le(e[2]), u = s * s + c * c;
 	return [
 		l / A,
 		S * l ** +C * u ** +w / A,
@@ -191,7 +191,7 @@ function me(e) {
 	];
 }
 function he(e) {
-	let t = e[0] * A, n = t > 0 ? (e[1] * A / (S * t ** +C)) ** T : 0, r = n * Math.cos(e[2]), i = n * Math.sin(e[2]), a = k[0] * r + k[1] * i, o = k[2] * r + k[3] * i, s = -D[0] * a / (Math.abs(a) - E[0]), c = -D[1] * o / (Math.abs(o) - E[1]), l = [
+	let t = e[0] * A, n = t > 0 ? (e[1] * A / (S * t ** +C)) ** T : 0, r = n * Math.cos(e[2]), i = n * Math.sin(e[2]), a = k[0] * r + k[1] * i, o = k[2] * r + k[3] * i, s = -O[0] * a / (Math.abs(a) - D[0]), c = -O[1] * o / (Math.abs(o) - D[1]), l = [
 		0,
 		0,
 		0
@@ -205,7 +205,7 @@ function he(e) {
 	];
 }
 function ge(e) {
-	let t = e[0] * (e[1] ** +ee + 1);
+	let t = e[0] * (e[1] ** +E + 1);
 	return [
 		e[2],
 		t > 0 ? e[1] / t : 0,
@@ -215,7 +215,7 @@ function ge(e) {
 function _e(e) {
 	let t = e[1] * e[2];
 	return [
-		e[2] / (t ** +ee + 1),
+		e[2] / (t ** +E + 1),
 		t,
 		e[0]
 	];
@@ -274,26 +274,26 @@ function Ce(t) {
 function we(e) {
 	return ge(Ce(e));
 }
-function Te(e) {
+function M(e) {
 	return e <= .04045 ? e / 12.92 : ((e + .055) / 1.055) ** 2.4;
 }
-function Ee(e) {
+function Te(e) {
 	return e <= .0031308 ? 12.92 * e : 1.055 * e ** (1 / 2.4) - .055;
 }
 //#endregion
 //#region src/curve.ts
-var M = [
+var N = [
 	"saturation",
 	"brightness",
 	"hue"
-], De = .01, Oe = .999, ke = 2 * Math.PI / 128, N = 2 * Math.PI;
-function Ae() {
+], Ee = .01, De = .999, Oe = 2 * Math.PI / 128, P = 2 * Math.PI;
+function ke() {
 	return Array.from({ length: 8 }, (e, t) => ({
 		x: t / 8,
 		y: .5
 	}));
 }
-function P(e) {
+function Ae(e) {
 	return e.map((e) => ({
 		x: e.x - Math.floor(e.x),
 		y: e.y
@@ -301,7 +301,7 @@ function P(e) {
 }
 function F(e, t) {
 	if (e.length < 2) return .5;
-	let n = P(e), r = n.length, i = Array(r);
+	let n = Ae(e), r = n.length, i = Array(r);
 	for (let e = 0; e < r - 1; e++) i[e] = (n[e + 1].y - n[e].y) / (n[e + 1].x - n[e].x);
 	i[r - 1] = (n[0].y - n[r - 1].y) / (n[0].x - n[r - 1].x + 1);
 	let a = Array(r);
@@ -326,17 +326,17 @@ function F(e, t) {
 	return n[s].y + (n[c].y - n[s].y) * m + l * (a[s] * p + a[c] * h);
 }
 function I(e, t) {
-	if (e === "hue") return (t - .5) * N;
+	if (e === "hue") return (t - .5) * P;
 	let n = t * 2;
 	return n < 0 ? 0 : n > 2 ? 2 : n;
 }
 function je(e, t) {
-	let n = e === "hue" ? t / N + .5 : t * .5;
+	let n = e === "hue" ? t / P + .5 : t * .5;
 	return n < 0 ? 0 : n > 1 ? 1 : n;
 }
 function Me(e) {
-	for (; e < 0;) e += N;
-	for (; e >= N;) e -= N;
+	for (; e < 0;) e += P;
+	for (; e >= P;) e -= P;
 	return e;
 }
 function Ne(e) {
@@ -346,7 +346,7 @@ function Pe(e) {
 	return Ne((360 * e + 20) * Math.PI / 180);
 }
 function L(e) {
-	return Me(e - 20 * Math.PI / 180) / N;
+	return Me(e - 20 * Math.PI / 180) / P;
 }
 function Fe(e, t) {
 	let n = Math.abs(e - t);
@@ -372,9 +372,9 @@ function Ie(e, t, n) {
 	};
 }
 function Le(e, t, n, r) {
-	let i = e.length, a = n < 0 ? 0 : n > .999 ? Oe : n, o = r < 0 ? 0 : r > 1 ? 1 : r;
-	if (t === 0) a + 1 - e[i - 1].x < .01 && (a = e[i - 1].x + De - 1);
-	else if (t === i - 1) e[0].x + 1 - a < .01 && (a = e[0].x + 1 - De);
+	let i = e.length, a = n < 0 ? 0 : n > .999 ? De : n, o = r < 0 ? 0 : r > 1 ? 1 : r;
+	if (t === 0) a + 1 - e[i - 1].x < .01 && (a = e[i - 1].x + Ee - 1);
+	else if (t === i - 1) e[0].x + 1 - a < .01 && (a = e[0].x + 1 - Ee);
 	else if (a - e[t - 1].x < .01 || e[t + 1].x - a < .01) return null;
 	let s = [...e];
 	return s[t] = {
@@ -391,7 +391,7 @@ function ze(e, t) {
 	return e === "hue" ? (t === "coarse" ? 10 : t === "fine" ? 1 : 5) * Math.PI / 180 : t === "coarse" ? .1 : t === "fine" ? .02 : .05;
 }
 function Be(e, t, n, r, i) {
-	let a = ze(t, i) * r, o = 2 * ke * ke;
+	let a = ze(t, i) * r, o = 2 * Oe * Oe;
 	return e.map((e) => {
 		let r = Fe(e.x, n), i = Math.exp(-(r * r) / o), s = I(t, e.y) + a * i;
 		return s = t === "hue" ? s < -Math.PI ? -Math.PI : s > Math.PI ? Math.PI : s : s < 0 ? 0 : s > 2 ? 2 : s, {
@@ -539,7 +539,7 @@ function tt() {
 	let e = {};
 	for (let t of R) {
 		e[t] = {};
-		for (let n of M) e[t][n] = Ae();
+		for (let n of N) e[t][n] = ke();
 	}
 	return e;
 }
@@ -553,7 +553,7 @@ var V = {
 	interpolation: 0
 };
 function nt(e) {
-	for (let t of R) for (let n of M) if (e.curves[t][n].some((e) => e.y !== .5)) return !0;
+	for (let t of R) for (let n of N) if (e.curves[t][n].some((e) => e.y !== .5)) return !0;
 	return !1;
 }
 //#endregion
@@ -591,14 +591,14 @@ var U = Object.fromEntries([
 ].map((e) => [e, `${H}.${e}`]));
 function lt() {
 	let e = [];
-	for (let t of R) for (let n of M) {
+	for (let t of R) for (let n of N) {
 		for (let r = 0; r < 10; r++) e.push(st(t, n, r));
 		e.push(ct(t, n));
 	}
 	return e;
 }
 function ut(e) {
-	let t = P(e), n = [];
+	let t = Ae(e), n = [];
 	for (let e = 0; e < 10; e++) {
 		let r = t[2 * e], i = t[2 * e + 1];
 		n.push([
@@ -623,7 +623,7 @@ function pt(e, t) {
 			y: t[i + 1]
 		});
 	}
-	let r = P(n), i = [];
+	let r = Ae(n), i = [];
 	for (let e of r) i.length > 0 && Math.abs(e.x - i[i.length - 1].x) < 1e-6 || i.push(e);
 	return i;
 }
@@ -647,7 +647,7 @@ function G(e) {
 	let t = tt(), n = {};
 	for (let r of R) {
 		n[r] = {};
-		for (let i of M) n[r][i] = mt(e, r, i) ?? t[r][i];
+		for (let i of N) n[r][i] = mt(e, r, i) ?? t[r][i];
 	}
 	let r = Math.round(W(e, U.interpolation, V.interpolation));
 	return {
@@ -662,7 +662,7 @@ function G(e) {
 }
 function K(e) {
 	let t = {};
-	for (let n of R) for (let r of M) {
+	for (let n of R) for (let r of N) {
 		let { chunks: i, count: a } = ut(e.curves[n][r]);
 		i.forEach((e, i) => {
 			t[st(n, r, i)] = e;
@@ -697,9 +697,11 @@ var yt = null;
 function bt() {
 	yt = q().stores.create((e) => ({
 		mode: null,
+		view: null,
 		samples: {
 			input: null,
-			output: null
+			output: null,
+			view: null
 		},
 		cursor: null,
 		picker: null,
@@ -707,6 +709,7 @@ function bt() {
 			mode: t,
 			cursor: null
 		}),
+		setView: (t) => e({ view: t }),
 		setSamples: (t) => e({ samples: t }),
 		setCursor: (t) => e({ cursor: t }),
 		setPicker: (t) => e({ picker: t })
@@ -716,27 +719,28 @@ function Y() {
 	if (!yt) throw Error("[colour-equaliser] store() called before activate()");
 	return yt;
 }
-var xt = /* @__PURE__ */ new Float32Array(256);
-for (let e = 0; e < 256; e++) xt[e] = Te(e / 255);
+//#endregion
+//#region src/sample.ts
+var xt = 1e3, St = /* @__PURE__ */ new Float32Array(256);
+for (let e = 0; e < 256; e++) St[e] = M(e / 255);
 var X = null;
-function St(e) {
+function Ct(e) {
 	let { width: t, height: n } = e;
 	if (t < 2 || n < 2) return null;
-	let r = Math.min(1, 320 / Math.max(t, n)), i = Math.max(1, Math.round(t * r)), a = Math.max(1, Math.round(n * r));
-	X ||= new OffscreenCanvas(i, a), X.width !== i && (X.width = i), X.height !== a && (X.height = a);
-	let o = X.getContext("2d", { willReadFrequently: !0 });
-	return o ? (o.drawImage(e, 0, 0, i, a), {
-		data: o.getImageData(0, 0, i, a).data,
-		width: i,
-		height: a
+	X ||= new OffscreenCanvas(t, n), X.width !== t && (X.width = t), X.height !== n && (X.height = n);
+	let r = X.getContext("2d", { willReadFrequently: !0 });
+	return r ? (r.drawImage(e, 0, 0), {
+		data: r.getImageData(0, 0, t, n).data,
+		width: t,
+		height: n
 	}) : null;
 }
-function Ct(e, t, n) {
+function wt(e, t, n) {
 	if (t < 0 || t > 1 || n < 0 || n > 1) return null;
 	let { data: r, width: i, height: a } = e, o = Math.min(i - 1, Math.floor(t * i)), s = Math.min(a - 1, Math.floor(n * a)), c = 0, l = 0, u = 0, d = 0;
 	for (let e = Math.max(0, s - 2); e <= Math.min(a - 1, s + 2); e++) for (let t = Math.max(0, o - 2); t <= Math.min(i - 1, o + 2); t++) {
 		let n = (e * i + t) * 4;
-		c += xt[r[n]], l += xt[r[n + 1]], u += xt[r[n + 2]], d++;
+		c += St[r[n]], l += St[r[n + 1]], u += St[r[n + 2]], d++;
 	}
 	return d === 0 ? null : [
 		c / d,
@@ -744,11 +748,11 @@ function Ct(e, t, n) {
 		u / d
 	];
 }
-function wt(e) {
-	let t = (e) => Math.round(Ee(e < 0 ? 0 : e > 1 ? 1 : e) * 255);
+function Tt(e) {
+	let t = (e) => Math.round(Te(e < 0 ? 0 : e > 1 ? 1 : e) * 255);
 	return `rgb(${t(e[0])}, ${t(e[1])}, ${t(e[2])})`;
 }
-function Tt(e) {
+function Et(e) {
 	let t = (e) => Math.min(100, Math.max(0, Math.round((1 - e) * 100)));
 	if (e <= .15) return "100% shadows";
 	if (e < .45) {
@@ -761,69 +765,80 @@ function Tt(e) {
 	}
 	return "100% highlights";
 }
-function Et(e) {
-	let t = e.throttleMs ?? 150, n = !1, r = !1, i = !1, a = null, o = -Infinity, s = () => {
+function Dt(e) {
+	let t = e.throttleMs ?? 150, n = !1, r = !1, i = !1, a = null, o = null, s = -Infinity, c = () => {
+		o !== null || n || (o = setTimeout(() => {
+			o = null, u();
+		}, xt));
+	}, l = () => {
 		a = null;
-		let t = e.develop.getState();
-		if (n || !t.photoId) return;
-		r = !0, o = Date.now();
-		let s = t.previewParams ?? t.params;
-		Promise.all([e.captureOutput(s), e.renderInput(t.photoId, s, {
-			...t.paramBag,
-			[U.on]: 0
-		})]).then(([t, r]) => {
+		let t = e.develop.getState(), o = e.view.getState().view;
+		if (n || !t.photoId || !o) return;
+		r = !0, s = Date.now();
+		let l = t.previewParams ?? t.params;
+		Promise.allSettled([e.capture(l), e.capture(l, { [U.on]: 0 })]).then(([t, r]) => {
 			let i = (t) => {
-				let r = t && !n ? e.readback(t) : null;
-				return t?.close?.(), r;
-			}, a = {
-				output: i(t),
-				input: i(r)
-			};
-			n || e.publish(a);
-		}).catch(() => {
-			n || e.publish({
-				input: null,
-				output: null
-			});
+				if (t.status === "rejected") return null;
+				let r = n ? null : e.readback(t.value);
+				return t.value.close?.(), r;
+			}, a = i(t), s = i(r);
+			if (!n) {
+				if (a && s) {
+					e.publish({
+						output: a,
+						input: s,
+						view: o.rect
+					});
+					return;
+				}
+				e.publish({
+					input: null,
+					output: null,
+					view: null
+				}), c();
+			}
 		}).finally(() => {
-			r = !1, i && !n && (i = !1, c());
+			r = !1, i && !n && (i = !1, u());
 		});
-	}, c = () => {
+	}, u = () => {
 		if (!n) {
 			if (r) {
 				i = !0;
 				return;
 			}
-			a === null && (a = setTimeout(s, Math.max(0, t - (Date.now() - o))));
+			a === null && (a = setTimeout(l, Math.max(0, t - (Date.now() - s))));
 		}
-	}, l = e.develop.subscribe((t, n) => {
+	}, d = e.develop.subscribe((t, n) => {
 		if (t.photoId !== n.photoId && !t.photoId) {
 			i = !1, a !== null && (clearTimeout(a), a = null), e.publish({
 				input: null,
-				output: null
+				output: null,
+				view: null
 			});
 			return;
 		}
-		t.photoId && (t.histogram !== n.histogram || t.photoId !== n.photoId || t.paramBag !== n.paramBag) && c();
+		t.photoId && (t.histogram !== n.histogram || t.photoId !== n.photoId || t.paramBag !== n.paramBag) && u();
+	}), f = e.view.subscribe((e, t) => {
+		e.view !== t.view && e.view && u();
 	});
-	return c(), () => {
-		n = !0, l(), a !== null && clearTimeout(a), a = null;
+	return u(), () => {
+		n = !0, d(), f(), a !== null && clearTimeout(a), o !== null && clearTimeout(o), a = null, o = null;
 	};
 }
-function Dt() {
+function Ot() {
 	let e = q();
-	return Et({
+	return Dt({
 		develop: e.stores.useDevelopStore,
-		captureOutput: (t) => e.develop.captureFrame(t),
-		renderInput: (t, n, r) => e.develop.renderPhotoFrame(t, n, r),
-		readback: St,
+		view: Y(),
+		capture: (t, n) => e.develop.captureFrame(t, n && { paramBag: n }),
+		readback: Ct,
 		publish: (e) => Y().getState().setSamples(e)
 	});
 }
 //#endregion
 //#region src/Graph.ts
-var Ot = 240;
-function kt(e) {
+var kt = "Drag a node · Ctrl+click adds one · right-click removes it · double-click resets the curve", At = 240;
+function jt(e) {
 	let t = getComputedStyle(e).backgroundColor.match(/\d+(?:\.\d+)?/g);
 	return !t || (Number(t[0]) + Number(t[1]) + Number(t[2])) / 765 < .5 ? {
 		fg: "rgba(235, 235, 235, 0.92)",
@@ -835,18 +850,18 @@ function kt(e) {
 		bg: "rgba(245, 245, 245, 0.9)"
 	};
 }
-var At = /* @__PURE__ */ new Map();
-function jt(e, t) {
-	let n = `${e}/${t}`, r = At.get(n);
+var Mt = /* @__PURE__ */ new Map();
+function Nt(e, t) {
+	let n = `${e}/${t}`, r = Mt.get(n);
 	if (r) return r;
 	let i = Qe(e, t), a = document.createElement("canvas");
 	a.width = i.width, a.height = i.height;
 	let o = a.getContext("2d");
-	return o && o.putImageData(new ImageData(i.data, i.width, i.height), 0, 0), At.set(n, a), a;
+	return o && o.putImageData(new ImageData(i.data, i.width, i.height), 0, 0), Mt.set(n, a), a;
 }
-function Mt(e, t, n, r) {
+function Pt(e, t, n, r) {
 	let { plotW: i, plotH: a } = t, o = (e) => 4 + e * i, s = (e) => 4 + (1 - e) * a;
-	e.clearRect(0, 0, t.width, t.height), e.drawImage(jt(r.ring, r.channel), 4, 4, i, a), e.lineWidth = .5, e.strokeStyle = n.faint;
+	e.clearRect(0, 0, t.width, t.height), e.drawImage(Nt(r.ring, r.channel), 4, 4, i, a), e.lineWidth = .5, e.strokeStyle = n.faint;
 	for (let t = 1; t < 8; t++) e.beginPath(), e.moveTo(o(t / 8), 4), e.lineTo(o(t / 8), 4 + a), e.moveTo(4, 4 + t / 8 * a), e.lineTo(4 + i, 4 + t / 8 * a), e.stroke();
 	e.lineWidth = 1, e.strokeStyle = n.fg, e.beginPath(), e.moveTo(4, s(.5)), e.lineTo(4 + i, s(.5)), e.stroke();
 	let c = e.createLinearGradient(4, 0, 4 + i, 0);
@@ -879,12 +894,12 @@ function Mt(e, t, n, r) {
 	}
 	e.restore();
 }
-function Nt(e, t, n) {
+function Ft(e, t, n) {
 	let r = I(e, F(t, L(n))), i = e === "hue" ? r / Math.PI : r - 1;
 	return i < -1 ? -1 : i > 1 ? 1 : i;
 }
-function Pt({ ring: e, channel: t }) {
-	let { useEffect: n, useRef: r, useState: i } = q().react, a = q().develop.useParamScope(), o = a.maskId !== null, s = a.getParams(), c = Y()((e) => o ? null : e.cursor), l = Y()((e) => o ? null : e.picker), u = G(s).curves[e][t], [d, f] = i(Ot), [p, m] = i(-1), [h, g] = i(0), _ = r(null), v = r(null), y = r(null), b = Ke(d);
+function It({ ring: e, channel: t }) {
+	let { useEffect: n, useRef: r, useState: i } = q().react, a = q().develop.useParamScope(), o = a.maskId !== null, s = a.getParams(), c = Y()((e) => o ? null : e.cursor), l = Y()((e) => o ? null : e.picker), u = G(s).curves[e][t], [d, f] = i(At), [p, m] = i(-1), [h, g] = i(0), _ = r(null), v = r(null), y = r(null), b = Ke(d);
 	n(() => {
 		let e = _.current;
 		if (!e) return;
@@ -893,16 +908,15 @@ function Pt({ ring: e, channel: t }) {
 			t > 40 && f(t);
 		});
 		return t.observe(e), () => t.disconnect();
-	}, []), n(() => {
-		let e = new MutationObserver(() => g((e) => e + 1));
-		return e.observe(document.documentElement, { attributes: !0 }), e.observe(document.body, { attributes: !0 }), () => e.disconnect();
-	}, []), n(() => {
+	}, []), n(() => q().stores.useThemeStore.subscribe((e, t) => {
+		e.activeId !== t.activeId && g((e) => e + 1);
+	}), []), n(() => {
 		let n = v.current;
 		if (!n) return;
 		let r = window.devicePixelRatio || 1;
 		n.width = Math.round(b.width * r), n.height = Math.round(b.height * r);
 		let i = n.getContext("2d");
-		i && (i.setTransform(r, 0, 0, r, 0, 0), Mt(i, b, kt(n), {
+		i && (i.setTransform(r, 0, 0, r, 0, 0), Pt(i, b, jt(n), {
 			ring: e,
 			channel: t,
 			nodes: u,
@@ -910,9 +924,9 @@ function Pt({ ring: e, channel: t }) {
 			pickerHue: l?.hue ?? null,
 			cursor: c ? {
 				hue: c.hue,
-				inputCss: wt(c.inputRgb),
-				outputCss: wt(c.outputRgb),
-				offset: Nt(t, u, c.hue)
+				inputCss: Tt(c.inputRgb),
+				outputCss: Tt(c.outputRgb),
+				offset: Ft(t, u, c.hue)
 			} : null
 		}));
 	}, [
@@ -956,27 +970,27 @@ function Pt({ ring: e, channel: t }) {
 			node: o,
 			moved: !1
 		});
-	}, ee = (n) => {
+	}, E = (n) => {
 		let { px: r, py: i } = w(n), a = x().curves[e][t], o = y.current;
 		if (o) {
 			let { x: e, y: t } = qe(b, r, i), n = Le(a, o.node, e, t);
 			if (n) {
 				let e = n[o.node];
-				o.node = P(n).findIndex((t) => t.x === e.x - Math.floor(e.x) && t.y === e.y), o.moved = !0, S(n), m(o.node);
+				o.node = Ae(n).findIndex((t) => t.x === e.x - Math.floor(e.x) && t.y === e.y), o.moved = !0, S(n), m(o.node);
 			}
 			return;
 		}
 		m(Je(a, b, r, i));
-	}, te = () => {
+	}, ee = () => {
 		let e = y.current;
 		y.current = null, e?.moved && C("curve");
-	}, ne = (n) => {
+	}, te = (n) => {
 		n.preventDefault();
 		let r = x().curves[e][t], i = Re(r, p);
 		i && (S(i), m(-1), C("remove node"));
-	}, re = () => {
-		S(Ae()), m(-1), C("reset curve");
-	}, E = {
+	}, ne = () => {
+		S(ke()), m(-1), C("reset curve");
+	}, D = {
 		width: b.width,
 		height: b.height,
 		display: "block",
@@ -990,175 +1004,206 @@ function Pt({ ring: e, channel: t }) {
 		style: { width: "100%" }
 	}, J("canvas", {
 		ref: v,
-		style: E,
+		title: kt,
+		style: D,
 		onPointerDown: T,
-		onPointerMove: ee,
-		onPointerUp: te,
+		onPointerMove: E,
+		onPointerUp: ee,
 		onPointerLeave: () => {
 			y.current || m(-1);
 		},
-		onContextMenu: ne,
-		onDoubleClick: re
+		onContextMenu: te,
+		onDoubleClick: ne
 	}));
 }
 //#endregion
 //#region src/Panel.ts
-var Ft = {
+var Lt = {
 	ring: "ring",
 	channel: "channel"
-}, It = [...R, "options"], Lt = {
+}, Rt = [...R, "options"], zt = {
 	shadows: "Shadows",
 	midtones: "Midtones",
 	highlights: "Highlights",
 	options: "Options"
-}, Rt = {
+}, Bt = {
 	saturation: "Saturation",
 	brightness: "Brightness",
 	hue: "Hue"
-}, zt = [
+}, Vt = [
 	"Tetrahedral",
 	"Trilinear",
 	"Pyramid"
-], Bt = "Drag a node · Ctrl+click adds one · right-click removes it · double-click resets the curve", Vt = "Adjust on image: scroll over the photo (Shift coarse, Alt fine), right-click adds a node there", Ht = {
-	margin: 0,
-	fontSize: 10,
-	lineHeight: 1.4,
-	color: "var(--color-text-muted)"
-};
+];
+function Ht() {
+	let e = q().settings.get(Lt.ring, "shadows");
+	return Rt.includes(e) ? e : "shadows";
+}
 function Ut() {
-	let e = q().settings.get(Ft.ring, "shadows");
-	return It.includes(e) ? e : "shadows";
+	let e = q().settings.get(Lt.channel, "saturation");
+	return N.includes(e) ? e : "saturation";
 }
 function Wt() {
-	let e = q().settings.get(Ft.channel, "saturation");
-	return M.includes(e) ? e : "saturation";
-}
-function Gt() {
-	let { useEffect: e, useState: t } = q().react, { Slider: n } = q().components, { Button: r, Select: i, SegmentedControl: a, Row: o, Stack: s } = q().ui, c = q().develop.useParamScope(), l = c.maskId !== null, u = Y()((e) => e.mode), d = Y()((e) => e.picker), [f, p] = t(Ut), [m, h] = t(Wt);
-	e(() => l ? void 0 : Dt(), [l]), e(() => l ? void 0 : () => Y().getState().setMode(null), [l]);
-	let g = G(c.getParams()), _ = () => G(c.getParams()), v = (e) => c.setParams(K(e)), y = (e) => c.commit(`Colour Equaliser ${e}`), b = (e, t, r, i, a) => J(n, {
+	let { useEffect: e, useState: t } = q().react, { Slider: n, PickerIcon: r } = q().components, { Button: i, Select: a, SegmentedControl: o, Row: s, Stack: c, tokens: l } = q().ui, u = q().develop.useParamScope(), d = u.maskId !== null, f = Y()((e) => e.mode), p = Y()((e) => e.picker), m = q().develop.usePickDragHeld(), h = q().develop.useCanvasToolHeld(), [g, _] = t(Ht), [v, y] = t(Ut);
+	e(() => d ? void 0 : () => Y().getState().setMode(null), [d]), e(() => {
+		d || (f === "pick" && !m || f === "adjust" && !h) && Y().getState().setMode(null);
+	}, [
+		d,
+		f,
+		m,
+		h
+	]);
+	let b = G(u.getParams()), x = () => G(u.getParams()), S = (e) => u.setParams(K(e)), C = (e) => u.commit(`Colour Equaliser ${e}`), w = (e, t, r, i, a) => J(n, {
 		key: t,
 		label: e,
-		value: g[t],
+		value: b[t],
 		min: r,
 		max: i,
 		step: a,
 		defaultValue: V[t],
-		onChange: (e) => v({
-			..._(),
+		onChange: (e) => S({
+			...x(),
 			[t]: e
 		}),
-		onCommit: () => y(e.toLowerCase())
-	}), x = J(a, {
+		onCommit: () => C(e.toLowerCase())
+	}), T = J(o, {
 		key: "pages",
-		value: f,
+		value: g,
 		size: "sm",
-		options: It.map((e) => ({
+		options: Rt.map((e) => ({
 			value: e,
-			label: Lt[e]
+			label: zt[e]
 		})),
 		onChange: (e) => {
-			p(e), q().settings.set(Ft.ring, e);
+			_(e), q().settings.set(Lt.ring, e);
 		}
 	});
-	if (f === "options") return J(s, {
+	if (g === "options") return J(c, {
 		gap: 6,
 		style: { padding: "6px 8px 8px" }
-	}, x, J("div", {
+	}, T, J("div", {
 		key: "options",
 		style: {
 			display: "flex",
 			flexDirection: "column",
 			gap: 1
 		}
-	}, b("White level", "whiteLevel", -2, 8, .01), b("Brightness smoothing", "sigmaL", 1, 100, 1), b("Saturation smoothing", "sigmaRho", .01, 2, .01), b("Hue smoothing", "sigmaTheta", .01, 6.28, .01), b("Neutral protection", "neutralProtection", 0, 2, .01)), J(o, {
+	}, w("White level", "whiteLevel", -2, 8, .01), w("Brightness smoothing", "sigmaL", 1, 100, 1), w("Saturation smoothing", "sigmaRho", .01, 2, .01), w("Hue smoothing", "sigmaTheta", .01, 6.28, .01), w("Neutral protection", "neutralProtection", 0, 2, .01)), J(s, {
 		key: "interpolation",
 		gap: 6
 	}, J("span", { style: {
 		fontSize: 11,
-		color: "var(--color-text-secondary)",
+		color: l.textSecondary,
 		whiteSpace: "nowrap"
 	} }, "Interpolation"), J("div", { style: {
 		flex: "1 1 auto",
 		minWidth: 0
-	} }, J(i, {
-		value: String(g.interpolation),
+	} }, J(a, {
+		value: String(b.interpolation),
 		ariaLabel: "Interpolation",
 		options: et.map((e, t) => ({
 			value: String(t),
-			label: zt[t]
+			label: Vt[t]
 		})),
 		onChange: (e) => {
-			v({
-				..._(),
+			S({
+				...x(),
 				interpolation: Number(e)
-			}), y("interpolation");
+			}), C("interpolation");
 		}
 	}))));
-	let S = f, C = J(a, {
+	let E = g, ee = J(o, {
 		key: "channels",
-		value: m,
+		value: v,
 		size: "sm",
-		options: M.map((e) => ({
+		options: N.map((e) => ({
 			value: e,
-			label: Rt[e]
+			label: Bt[e]
 		})),
 		onChange: (e) => {
-			h(e), q().settings.set(Ft.channel, e);
+			y(e), q().settings.set(Lt.channel, e);
 		}
-	}), w = (e) => Y().getState().setMode(u === e ? null : e), T = J(o, {
+	}), te = (e) => Y().getState().setMode(f === e ? null : e), ne = J(s, {
 		key: "tools",
 		gap: 6
-	}, J(r, {
+	}, J(i, {
 		size: "sm",
-		active: u === "pick",
+		active: f === "pick",
 		title: "Mark a colour from the image on the graphs (Esc cancels)",
-		onClick: () => w("pick")
-	}, "Pick"), J("span", { style: {
+		onClick: () => te("pick")
+	}, J(s, {
+		gap: 4,
+		align: "center"
+	}, J(r, { size: 12 }), "Pick")), J("span", { style: {
 		flex: "1 1 auto",
 		minWidth: 0,
 		fontSize: 10,
-		color: "var(--color-text-muted)",
+		color: l.textMuted,
 		overflow: "hidden",
 		textOverflow: "ellipsis",
 		whiteSpace: "nowrap"
-	} }, d ? Tt(d.brightness) : "No sample"), J(r, {
+	} }, p ? Et(p.brightness) : "No sample"), J(i, {
 		size: "sm",
-		active: u === "adjust",
-		title: "Adjust the active curve from the image: hover to mark its hue, scroll to shape the curve there, right-click to add a node (Esc ends)",
-		onClick: () => w("adjust")
+		active: f === "adjust",
+		title: "Adjust the active curve from the image: hover to mark its hue, scroll to shape the curve there (Shift coarse, Alt fine), right-click to add a node (Esc ends)",
+		onClick: () => te("adjust")
 	}, "Adjust on image"));
-	return J(s, {
+	return J(c, {
 		gap: 6,
 		style: { padding: "6px 8px 8px" }
-	}, x, C, J(Pt, {
-		key: `${S}/${m}`,
-		ring: S,
-		channel: m
-	}), l ? null : T, J("p", {
-		key: "hint",
-		style: Ht
-	}, l ? Bt : `${Bt} · ${Vt}`));
+	}, T, ee, J(It, {
+		key: `${E}/${v}`,
+		ring: E,
+		channel: v
+	}), d ? null : ne);
+}
+//#endregion
+//#region src/picker.ts
+function Gt(e) {
+	let [t, , n] = we(e);
+	return Number.isFinite(t) ? {
+		hue: Ne(t),
+		brightness: n < 0 ? 0 : n > 1 ? 1 : n
+	} : null;
+}
+async function Kt(e) {
+	try {
+		let t = await q().develop.sampleView(e, { [U.on]: 0 }), n = t && Gt([
+			M(t[0]),
+			M(t[1]),
+			M(t[2])
+		]);
+		if (!n || Y().getState().mode !== "pick") return;
+		Y().getState().setPicker(n), Y().getState().setMode(null);
+	} catch (e) {
+		console.warn("[colour-equaliser] pick failed:", e);
+	}
+}
+var qt = { onPress: (e) => void Kt(e) };
+function Jt() {
+	return Y().subscribe((e, t) => {
+		e.mode === "pick" != (t.mode === "pick") && q().develop.setPickDrag(e.mode === "pick" ? qt : null);
+	});
 }
 //#endregion
 //#region src/Overlay.ts
-var Kt = 300, qt = 14;
-function Jt(e, t, n, r, i) {
-	if (!i || n.width <= 0 || n.height <= 0 || i.w <= 0 || i.h <= 0) return null;
-	let a = r / n.width, o = ((e - n.left) * a - i.x) / i.w, s = ((t - n.top) * a - i.y) / i.h;
-	return o < 0 || o > 1 || s < 0 || s > 1 ? null : {
-		x: o,
-		y: s
+var Yt = 300, Xt = 14;
+function Zt(e, t) {
+	if (!t || t.w <= 0 || t.h <= 0) return null;
+	let n = (e.x - t.x) / t.w, r = (e.y - t.y) / t.h;
+	return n < 0 || n > 1 || r < 0 || r > 1 ? null : {
+		x: n,
+		y: r
 	};
 }
-function Yt() {
-	let e = Ut();
+function Qt() {
+	let e = Ht();
 	return {
 		ring: e === "options" ? "midtones" : e,
-		channel: Wt()
+		channel: Ut()
 	};
 }
-function Xt(e, t, n, r) {
+function $t(e, t, n, r) {
 	return {
 		...e,
 		curves: {
@@ -1170,117 +1215,97 @@ function Xt(e, t, n, r) {
 		}
 	};
 }
-function Zt(e) {
+function en(e) {
 	return e.shiftKey ? "coarse" : e.altKey ? "fine" : "normal";
 }
-function Qt(e) {
-	let { input: t, output: n } = Y().getState().samples;
-	if (!t) return null;
-	let r = Ct(t, e.x, e.y);
-	if (!r) return null;
-	let i = (n && Ct(n, e.x, e.y)) ?? r, a = we(r);
-	return Number.isFinite(a[0]) ? {
-		hue: Ne(a[0]),
-		brightness: a[2] < 0 ? 0 : a[2] > 1 ? 1 : a[2],
-		inputRgb: r,
-		outputRgb: i
-	} : null;
+function tn(e, t) {
+	let { input: n, output: r, view: i } = e, a = Zt(t, i);
+	if (!n || !a) return null;
+	let o = wt(n, a.x, a.y);
+	if (!o) return null;
+	let s = (r && wt(r, a.x, a.y)) ?? o, c = Gt(o);
+	return c && {
+		hue: c.hue,
+		inputRgb: o,
+		outputRgb: s
+	};
 }
-function $t() {
-	let { useEffect: e, useRef: t, useState: n } = q().react, r = q().stores.useDevelopStore, i = r((e) => e.paramBag), a = Y()((e) => e.mode), o = Y()((e) => e.cursor), s = q().develop.useDevelopOverlay(), c = t(null), [l, u] = n(!1), d = t(null);
-	e(() => {
-		if (a === null) return;
-		let e = /* @__PURE__ */ new Set(), t = () => u(e.has("Control") || e.has("Meta") || e.has(" ")), n = (n) => {
-			if (n.key === "Escape") {
-				Y().getState().setMode(null);
-				return;
-			}
-			e.add(n.key), t();
-		}, r = (n) => {
-			e.delete(n.key), t();
-		}, i = () => {
-			e.clear(), t();
-		};
-		return window.addEventListener("keydown", n), window.addEventListener("keyup", r), window.addEventListener("blur", i), () => {
-			window.removeEventListener("keydown", n), window.removeEventListener("keyup", r), window.removeEventListener("blur", i), u(!1);
-		};
-	}, [a]);
-	let f = () => {
-		d.current !== null && window.clearTimeout(d.current), d.current = window.setTimeout(() => {
-			d.current = null, r.getState().commitEdit("Colour Equaliser scroll");
-		}, Kt);
+function nn() {
+	let { useEffect: e, useRef: t } = q().react, n = q().stores.useDevelopStore, { rect: r, nonce: i } = q().develop.useDevelopOverlay(), a = n((e) => e.paramBag), o = Y()((e) => e.mode), s = Y()((e) => e.cursor), c = t(null), l = t(null), u = () => {
+		l.current !== null && window.clearTimeout(l.current), l.current = window.setTimeout(() => {
+			l.current = null, n.getState().commitEdit("Colour Equaliser scroll");
+		}, Yt);
 	};
 	if (e(() => () => {
-		d.current !== null && (window.clearTimeout(d.current), d.current = null, r.getState().commitEdit("Colour Equaliser scroll"));
+		l.current !== null && (window.clearTimeout(l.current), l.current = null, n.getState().commitEdit("Colour Equaliser scroll"));
+	}, []), e(() => Y().getState().setView(r && {
+		rect: r,
+		nonce: i
+	}), [r, i]), e(() => {
+		let e = Ot();
+		return () => {
+			e(), Y().getState().setView(null), Y().getState().setSamples({
+				input: null,
+				output: null,
+				view: null
+			});
+		};
 	}, []), e(() => {
 		let e = c.current;
-		if (!e || a !== "adjust") return;
+		if (!e || o !== "adjust") return;
 		let t = (e) => {
 			if (e.ctrlKey || e.metaKey) return;
 			let t = Y().getState().cursor;
 			if (!t || e.deltaY === 0) return;
 			e.preventDefault(), e.stopPropagation();
-			let { ring: n, channel: i } = Yt(), a = G(r.getState().paramBag), o = Be(a.curves[n][i], i, L(t.hue), e.deltaY < 0 ? 1 : -1, Zt(e));
-			r.getState().setDynParams(K(Xt(a, n, i, o))), f();
+			let { ring: r, channel: i } = Qt(), a = G(n.getState().paramBag), o = Be(a.curves[r][i], i, L(t.hue), e.deltaY < 0 ? 1 : -1, en(e));
+			n.getState().setDynParams(K($t(a, r, i, o))), u();
 		};
 		return e.addEventListener("wheel", t, { passive: !1 }), () => e.removeEventListener("wheel", t);
-	}, [a]), a === null) return null;
-	let p = (e, t) => {
-		let n = c.current;
-		if (!n) return null;
-		let r = n.getBoundingClientRect(), i = r.width > 0 ? n.clientWidth / r.width : 1;
-		return {
-			local: {
-				x: (e - r.left) * i,
-				y: (t - r.top) * i
-			},
-			uv: Jt(e, t, r, n.clientWidth, s.rect)
-		};
-	}, m = (e) => {
-		if (a !== "adjust") return;
-		let t = p(e.clientX, e.clientY), n = t?.uv && Qt(t.uv);
-		Y().getState().setCursor(t && n ? {
-			hue: n.hue,
-			inputRgb: n.inputRgb,
-			outputRgb: n.outputRgb,
-			local: t.local
-		} : null);
-	}, h = (e) => {
-		if (e.button !== 0 || a !== "pick") return;
-		e.preventDefault();
-		let t = p(e.clientX, e.clientY), n = t?.uv && Qt(t.uv);
-		n && (Y().getState().setPicker({
-			hue: n.hue,
-			brightness: n.brightness
-		}), Y().getState().setMode(null));
-	}, g = (e) => {
-		if (a !== "adjust") return;
+	}, [o]), o !== "adjust") return null;
+	let d = (e) => {
+		let t = c.current;
+		if (!t) return;
+		let n = q().develop.framePoint(t, e.clientX, e.clientY), r = tn(Y().getState().samples, n);
+		Y().getState().setCursor(r && {
+			...r,
+			local: n
+		});
+	}, f = (e) => {
 		e.preventDefault();
 		let t = Y().getState().cursor;
 		if (!t) return;
-		let { ring: n, channel: i } = Yt(), o = G(r.getState().paramBag), s = o.curves[n][i], c = L(t.hue), l = Ie(s, c, F(s, c));
-		l && (r.getState().setDynParams(K(Xt(o, n, i, l.nodes))), r.getState().commitEdit("Colour Equaliser add node"));
-	}, _ = {
+		let { ring: r, channel: i } = Qt(), a = G(n.getState().paramBag), o = a.curves[r][i], s = L(t.hue), c = Ie(o, s, F(o, s));
+		c && (n.getState().setDynParams(K($t(a, r, i, c.nodes))), n.getState().commitEdit("Colour Equaliser add node"));
+	}, p = {
 		position: "absolute",
 		inset: 0,
-		pointerEvents: l ? "none" : "auto",
-		cursor: a === "pick" ? q().cursors.resolve("pick") : o ? "none" : "crosshair"
-	}, v = null;
-	if (a === "adjust" && o) {
-		let { ring: e, channel: t } = Yt();
-		v = en(o, Nt(t, G(i).curves[e][t], o.hue));
+		cursor: s ? "none" : q().cursors.resolve("crosshair")
+	}, m = null;
+	if (s) {
+		let { ring: e, channel: t } = Qt();
+		m = on(s, Ft(t, G(a).curves[e][t], s.hue));
 	}
 	return J("div", {
 		ref: c,
-		style: _,
-		onPointerMove: m,
-		onPointerDown: h,
-		onContextMenu: g,
+		style: p,
+		onPointerMove: d,
+		onContextMenu: f,
 		onPointerLeave: () => Y().getState().setCursor(null)
-	}, v);
+	}, m);
 }
-function en(e, t) {
-	let n = qt, r = n * .55, i = n * 1.55, a = 26.7, o = 57.4, s = o / 2, c = wt(e.outputRgb), l = wt(e.inputRgb), u = 2 * Math.PI * Math.abs(t), d = -Math.PI / 2 + (t > 0 ? u : -u), f = Math.abs(t) > 1e-4 ? J("path", {
+var rn = {
+	overlay: nn,
+	zoomable: !0,
+	onEscape: () => Y().getState().setMode(null)
+};
+function an() {
+	return Y().subscribe((e, t) => {
+		e.mode === "adjust" != (t.mode === "adjust") && q().develop.setCanvasTool(e.mode === "adjust" ? rn : null);
+	});
+}
+function on(e, t) {
+	let n = Xt, r = n * .55, i = n * 1.55, a = 26.7, o = 57.4, s = o / 2, c = Tt(e.outputRgb), l = Tt(e.inputRgb), u = 2 * Math.PI * Math.abs(t), d = -Math.PI / 2 + (t > 0 ? u : -u), f = Math.abs(t) > 1e-4 ? J("path", {
 		key: "arc",
 		d: `M ${s} 7 A ${i} ${i} 0 ${+(u > Math.PI)} ${+(t > 0)} ${s + i * Math.cos(d)} ${s + i * Math.sin(d)}`,
 		fill: "none",
@@ -1333,13 +1358,13 @@ function en(e, t) {
 }
 //#endregion
 //#region src/glsl.ts
-function tn(e) {
+function sn(e) {
 	let t = e.toPrecision(10);
 	if (!t.includes("e")) return t.includes(".") ? t : `${t}.0`;
 	let [n, r] = t.split("e");
 	return `${n.includes(".") ? n : `${n}.0`}e${r}`;
 }
-var Z = tn, nn = (e) => `vec2(${e.map(Z).join(", ")})`, rn = (e) => `vec3(${e.map(Z).join(", ")})`, an = (e) => `mat3(${[
+var Z = sn, cn = (e) => `vec2(${e.map(Z).join(", ")})`, ln = (e) => `vec3(${e.map(Z).join(", ")})`, un = (e) => `mat3(${[
 	0,
 	3,
 	6,
@@ -1349,14 +1374,14 @@ var Z = tn, nn = (e) => `vec2(${e.map(Z).join(", ")})`, rn = (e) => `vec3(${e.ma
 	2,
 	5,
 	8
-].map((t) => Z(e[t])).join(", ")})`, on = Z(Math.PI), Q = Z(2 * Math.PI), sn = `
+].map((t) => Z(e[t])).join(", ")})`, dn = Z(Math.PI), Q = Z(2 * Math.PI), fn = `
 float ceYOfLStar(float L) {
   return pow(${Z(b)} * L / (${Z(v)} - L), ${Z(x)});
 }
 float ceSafeDiv(float d) { return d >= 0.0 ? max(${Z(ce)}, d) : min(-${Z(ce)}, d); }
 float ceWrap2Pi(float h) { return h - ${Q} * floor(h / ${Q}); }
-float ceWrapHuePi(float h) { return ceWrap2Pi(h + ${on}) - ${on}; }
-float ceWrapPi(float x) { return x - ${Q} * floor((x + ${on}) / ${Q}); }
+float ceWrapHuePi(float h) { return ceWrap2Pi(h + ${dn}) - ${dn}; }
+float ceWrapPi(float x) { return x - ${Q} * floor((x + ${dn}) / ${Q}); }
 // (J, C, H radians) -> xyY D65; black stays black rather than 0/0.
 vec3 ceJchToXyY(vec3 jch) {
   float L = jch.x * ${Z(A)};
@@ -1366,8 +1391,8 @@ vec3 ceJchToXyY(vec3 jch) {
   vec2 p = M * vec2(cos(jch.z), sin(jch.z));
   vec2 uvs = vec2(${Z(k[0])} * p.x + ${Z(k[1])} * p.y,
                   ${Z(k[2])} * p.x + ${Z(k[3])} * p.y);
-  vec2 uv = -${nn(D)} * uvs / (abs(uvs) - ${nn(E)});
-  vec3 xyD = ${rn(ie)} * uv.x + ${rn(ae)} * uv.y + ${rn(oe)};
+  vec2 uv = -${cn(O)} * uvs / (abs(uvs) - ${cn(D)});
+  vec3 xyD = ${ln(ie)} * uv.x + ${ln(ae)} * uv.y + ${ln(oe)};
   return vec3(xyD.xy / ceSafeDiv(xyD.z), L > 0.0 ? ceYOfLStar(L) : 0.0);
 }
 vec3 ceXyYToXyz(vec3 xyY) {
@@ -1377,7 +1402,7 @@ vec3 ceXyYToXyz(vec3 xyY) {
 // (H radians, S, B) -> XYZ D65 at the graph white.
 vec3 ceHsbToXyz(vec3 hsb) {
   float C = hsb.y * hsb.z;
-  return ceXyYToXyz(ceJchToXyY(vec3(hsb.z / (pow(C, ${Z(ee)}) + 1.0), C, hsb.x)));
+  return ceXyYToXyz(ceJchToXyY(vec3(hsb.z / (pow(C, ${Z(E)}) + 1.0), C, hsb.x)));
 }
 float ceHlgOetf1(float E) {
   if (E <= 0.0) return 0.0;
@@ -1393,8 +1418,8 @@ float ceHlgEotf1(float e) {
 vec3 ceHlgEotf(vec3 e) { return vec3(ceHlgEotf1(e.x), ceHlgEotf1(e.y), ceHlgEotf1(e.z)); }
 // XYZ D65 -> the table's code values: CAT16 to D50, the profile's matrix, HLG.
 vec3 ceXyzToLutRgb(vec3 xyz) {
-  const mat3 cat16 = ${an(a)};
-  const mat3 toRec2020 = ${an(p)};
+  const mat3 cat16 = ${un(a)};
+  const mat3 toRec2020 = ${un(p)};
   return ceHlgOetf(toRec2020 * (cat16 * xyz));
 }
 vec3 ceHsbToLutRgb(vec3 hsb) { return ceXyzToLutRgb(ceHsbToXyz(hsb)); }
@@ -1434,16 +1459,16 @@ float ceWendland(float d) {
   float t = 1.0 - d;
   return t * t * t * t * (4.0 * d + 1.0);
 }
-`, cn = (e, t) => `float ${e}(int ring) { return ring == 0 ? ${Z(t[0])} : (ring == 1 ? ${Z(t[1])} : ${Z(t[2])}); }`, ln = `
-${cn("ceRingBrightness", R.map((e) => z[e]))}
-${cn("ceRefSat", R.map((e) => Ue[e]))}
-${cn("ceAxisRgb", R.map((e) => We(z[e])))}
-float ceCurveXToHue(float x) { return ceWrapHuePi((360.0 * x + ${Z(20)}) * ${on} / 180.0); }
+`, pn = (e, t) => `float ${e}(int ring) { return ring == 0 ? ${Z(t[0])} : (ring == 1 ? ${Z(t[1])} : ${Z(t[2])}); }`, mn = `
+${pn("ceRingBrightness", R.map((e) => z[e]))}
+${pn("ceRefSat", R.map((e) => Ue[e]))}
+${pn("ceAxisRgb", R.map((e) => We(z[e])))}
+float ceCurveXToHue(float x) { return ceWrapHuePi((360.0 * x + ${Z(20)}) * ${dn} / 180.0); }
 // Channel 2 (hue) reads a shift in radians; 0 and 1 (saturation, brightness) a gain in [0, 2].
 float ceChannelValue(int channel, float y) {
   return channel == 2 ? (y - 0.5) * ${Q} : clamp(y * 2.0, 0.0, 2.0);
 }
-`, un = R.flatMap((e) => M.map((t) => `${e}${ot[t]}`)), dn = (e) => `vec4[10](${Array.from({ length: 10 }, (t, n) => `${e}${n}`).join(", ")})`, fn = un.map((e, t) => `${t === 0 ? "if" : "else if"} (curve == ${t}) { n = ${dn(e)}; count = ${e}Count; }`).join("\n  "), pn = `
+`, hn = R.flatMap((e) => N.map((t) => `${e}${ot[t]}`)), gn = (e) => `vec4[10](${Array.from({ length: 10 }, (t, n) => `${e}${n}`).join(", ")})`, _n = hn.map((e, t) => `${t === 0 ? "if" : "else if"} (curve == ${t}) { n = ${gn(e)}; count = ${e}Count; }`).join("\n  "), vn = `
 // Node k of a curve packed two per vec4.
 vec2 ceNode(vec4 n[10], int k) {
   vec4 c = n[k / 2];
@@ -1509,10 +1534,10 @@ float ceHermite(vec4 n[10], int count, float x) {
 float ceSample(int curve, float x) {
   vec4 n[10];
   int count = 0;
-  ${fn}
+  ${_n}
   return count < 2 ? 0.5 : ceHermite(n, count, x);
 }
-`, mn = `
+`, yn = `
 // The largest level <= 64 whose cube fits the target's texels, never below 2.
 highp int ceLutLevel(highp int texels) {
   highp int l = min(64, int(floor(pow(float(texels), 1.0 / 3.0))) + 1);
@@ -1565,7 +1590,7 @@ vec3 ceInterp(sampler2D lut, highp int w, highp int level, vec3 n, int mode) {
   if (b > r) return (1.0 - g) * c000 + (g - b) * c010 + (b - r) * c011 + r * c111;
   return (1.0 - g) * c000 + (g - r) * c010 + (r - b) * c110 + b * c111;
 }
-`, hn = `
+`, bn = `
 {
   highp int w = int(1.0 / uTexel.x + 0.5);
   highp ivec2 px = ivec2(vUv / uTexel);
@@ -1593,7 +1618,7 @@ vec3 ceInterp(sampler2D lut, highp int w, highp int level, vec3 n, int mode) {
     c = (i - 2 * a) == 0 ? p : vec3(q.x - p.x, scale, ceWrapPi(shift));
   }
 }
-`, gn = `
+`, xn = `
 {
   highp int w = int(1.0 / uTexel.x + 0.5);
   highp int hgt = int(1.0 / uTexel.y + 0.5);
@@ -1667,15 +1692,15 @@ vec3 ceInterp(sampler2D lut, highp int w, highp int level, vec3 n, int mode) {
   }
 }
 `;
-function _n(e) {
+function Sn(e) {
 	return `
 {
   if (on > 0.5) {
     highp ivec2 sz = textureSize(${e}, 0);
     highp int level = ceLutLevel(sz.x * sz.y);
     if (ceMarked(${e}, sz.x, level)) {
-      const mat3 toRec2020 = ${an(m)};
-      const mat3 toSrgb = ${an(h)};
+      const mat3 toRec2020 = ${un(m)};
+      const mat3 toSrgb = ${un(h)};
       float white = exp2(whiteLevel);
 #if SL_PROCESS_VERSION >= 2
       vec3 E = toRec2020 * (lin / white);
@@ -1692,12 +1717,12 @@ function _n(e) {
 }
 `;
 }
-function vn(e) {
+function Cn(e) {
 	return `u_${it(e)}_stageResult`;
 }
-function yn() {
-	let e = [], { chunks: t } = ut(Ae());
-	for (let n of R) for (let r of M) {
+function wn() {
+	let e = [], { chunks: t } = ut(ke());
+	for (let n of R) for (let r of N) {
 		let i = `${n}${ot[r]}`;
 		for (let n = 0; n < 10; n++) e.push({
 			key: `${i}${n}`,
@@ -1712,22 +1737,22 @@ function yn() {
 	}
 	return e;
 }
-function bn() {
+function Tn() {
 	return {
-		glsl: hn,
+		glsl: bn,
 		helpers: `precision highp int;
-${sn}
-${ln}
-${pn}`,
+${fn}
+${mn}
+${vn}`,
 		iterations: 1,
-		uniforms: yn()
+		uniforms: wn()
 	};
 }
 var $ = V;
-function xn() {
+function En() {
 	return {
-		glsl: gn,
-		helpers: `${sn}\n${mn}`,
+		glsl: xn,
+		helpers: `${fn}\n${yn}`,
 		iterations: 1,
 		uniforms: [
 			{
@@ -1777,14 +1802,14 @@ function xn() {
 		]
 	};
 }
-function Sn() {
+function Dn() {
 	return {
 		id: H,
 		name: "Colour Equaliser",
 		phase: "scene-linear",
 		priority: 85,
-		glsl: _n(vn(H)),
-		helpers: `${sn}\n${mn}`,
+		glsl: Sn(Cn(H)),
+		helpers: `${fn}\n${yn}`,
 		uniforms: [
 			{
 				key: "whiteLevel",
@@ -1814,60 +1839,57 @@ function Sn() {
 				default: 0
 			}
 		],
-		passes: [bn(), xn()],
+		passes: [Tn(), En()],
 		presetScope: "global",
 		mask: { maskable: !0 }
 	};
 }
-function Cn() {
-	return [Sn()];
+function On() {
+	return [Dn()];
 }
 //#endregion
 //#region src/index.ts
-var wn = `${rt}.panel`, Tn = `${rt}.overlay`, En = null;
-function Dn() {
+var kn = `${rt}.panel`, An = null, jn = [];
+function Mn() {
 	let e = q().stores.useDevelopStore.getState();
 	e.setDynParams(ht()), e.commitEdit("Colour Equaliser reset");
 }
-function On(e) {
+function Nn(e) {
 	vt(e), bt();
-	for (let t of Cn()) e.registerProcessingStage(t);
+	for (let t of On()) e.registerProcessingStage(t);
 	e.registerPanel({
-		id: wn,
+		id: kn,
 		title: "Colour Equaliser",
-		component: Gt,
+		component: Wt,
 		defaultDock: {
 			module: "develop",
 			direction: "right",
 			order: 7,
 			width: 268
 		},
-		onReset: Dn,
+		modules: ["develop"],
+		onReset: Mn,
 		mask: {
-			component: Gt,
+			component: Wt,
 			owns: [...lt(), ...Object.values(U)]
 		}
-	}), e.registerSlot({
-		id: Tn,
-		slot: "develop-canvas-overlay",
-		component: $t,
-		order: 60
-	}), En = e.stores.useDevelopStore.subscribe((e, t) => {
+	}), jn = [Jt(), an()], An = e.stores.useDevelopStore.subscribe((e, t) => {
 		if (e.paramBag === t.paramBag) return;
 		let n = gt(e.paramBag);
 		n && e.setDynParams(n);
 	});
 }
-function kn() {
-	En?.(), En = null;
+function Pn() {
+	An?.(), An = null;
 	try {
 		Y().getState().setMode(null);
+		for (let e of jn) e();
+		jn = [];
 		let e = q();
-		for (let t of Cn()) e.unregisterProcessingStage(t.id);
-		e.unregisterSlot(Tn);
+		for (let t of On()) e.unregisterProcessingStage(t.id);
 	} catch {}
 }
 //#endregion
-export { On as activate, kn as deactivate };
+export { Nn as activate, Pn as deactivate };
 
 //# sourceMappingURL=index.js.map

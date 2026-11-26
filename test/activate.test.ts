@@ -13,8 +13,10 @@ import { fakeStore } from "./support/fake-store";
 import { paramsFromReference } from "./support/reference-params";
 import { V } from "./support/vectors";
 import type {
+  CanvasTool,
   DevelopStoreState,
   PanelContribution,
+  PickDragTool,
   ProcessingStageContribution,
   SafelightAPI,
   SlotContribution,
@@ -27,10 +29,14 @@ interface Registered {
   unregisteredStages: string[];
   unregisteredSlots: string[];
   patches: Record<string, unknown>[];
+  /** What the extension handed setCanvasTool, in order. */
+  canvasTools: (CanvasTool | null)[];
+  /** What the extension handed setPickDrag, in order. */
+  pickDrags: (PickDragTool | null)[];
 }
 
 function fakeApi() {
-  const registered: Registered = { stages: [], panels: [], slots: [], unregisteredStages: [], unregisteredSlots: [], patches: [] };
+  const registered: Registered = { stages: [], panels: [], slots: [], unregisteredStages: [], unregisteredSlots: [], patches: [], canvasTools: [], pickDrags: [] };
   const develop = fakeStore<DevelopStoreState>({
     photoId: null,
     paramBag: {},
@@ -55,6 +61,10 @@ function fakeApi() {
       set: (key: string, value: unknown) => void values.set(key, value),
       onChange: () => () => undefined,
     },
+    develop: {
+      setCanvasTool: (tool: CanvasTool | null) => void registered.canvasTools.push(tool),
+      setPickDrag: (tool: PickDragTool | null) => void registered.pickDrags.push(tool),
+    },
     stores: { create: fakeStore, useDevelopStore: develop },
   } as unknown as SafelightAPI;
   return { api, registered, develop };
@@ -63,7 +73,7 @@ function fakeApi() {
 describe("activate", () => {
   afterEach(() => deactivate());
 
-  it("registers the stage, the panel and the overlay slot", () => {
+  it("registers the stage and the panel, and no canvas overlay", () => {
     const { api, registered } = fakeApi();
     activate(api);
     expect(registered.stages.map((s) => s.id)).toEqual([STAGE_ID]);
@@ -71,7 +81,7 @@ describe("activate", () => {
     expect(registered.panels[0].title).toBe("Colour Equaliser");
     expect(registered.panels[0].defaultDock).toMatchObject({ module: "develop", direction: "right" });
     expect(typeof registered.panels[0].onReset).toBe("function");
-    expect(registered.slots).toMatchObject([{ id: "colour-equaliser.overlay", slot: "develop-canvas-overlay" }]);
+    expect(registered.slots).toEqual([]);
   });
 
   it("offers the panel in masks, owning every key it writes", () => {
@@ -104,14 +114,38 @@ describe("activate", () => {
     expect(registered.patches.length).toBe(1);
   });
 
-  it("clears the overlay mode, drops the stage and the slot, and stops listening on deactivate", () => {
-    const { api, registered, develop } = fakeApi();
+  it("holds core's pick-drag tool for Pick and a zoomable canvas tool for Adjust, one at a time", () => {
+    const { api, registered } = fakeApi();
+    activate(api);
+    store().getState().setMode("pick");
+    expect(registered.pickDrags).toEqual([expect.objectContaining({ onPress: expect.any(Function) })]);
+    expect(registered.canvasTools).toEqual([]);
+    store().getState().setMode("adjust");
+    expect(registered.pickDrags[1]).toBeNull();
+    expect(registered.canvasTools).toEqual([expect.objectContaining({ zoomable: true, overlay: expect.any(Function) })]);
+    store().getState().setMode(null);
+    expect(registered.canvasTools).toHaveLength(2);
+    expect(registered.canvasTools[1]).toBeNull();
+    expect(registered.pickDrags).toHaveLength(2);
+  });
+
+  it("ends the mode on the canvas tool's Escape", () => {
+    const { api, registered } = fakeApi();
     activate(api);
     store().getState().setMode("adjust");
+    registered.canvasTools[0]?.onEscape?.();
+    expect(store().getState().mode).toBeNull();
+  });
+
+  it("clears the on-image mode, lets the tools go, drops the stage and stops listening on deactivate", () => {
+    const { api, registered, develop } = fakeApi();
+    activate(api);
+    store().getState().setMode("pick");
     deactivate();
     expect(store().getState().mode).toBeNull();
+    expect(registered.pickDrags).toEqual([expect.any(Object), null]);
     expect(registered.unregisteredStages).toEqual([STAGE_ID]);
-    expect(registered.unregisteredSlots).toEqual(["colour-equaliser.overlay"]);
+    expect(registered.unregisteredSlots).toEqual([]);
     develop.setState({ paramBag: { ...deriveAll(paramsFromReference(V.params[0])), [KEY.on]: 0 } });
     expect(registered.patches.length).toBe(0);
   });

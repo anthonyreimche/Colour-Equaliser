@@ -4,20 +4,21 @@
 // rings of periodic hue curves — saturation, brightness, hue — authored in
 // darktable UCS and applied as a colour lookup table in HLG Rec2020.
 // Registers one scene-linear GPU stage (stage.ts), the Develop panel
-// (Panel.ts) and the on-image picker / adjustment overlay (Overlay.ts).
+// (Panel.ts), the on-image picker (picker.ts) and adjustment tool (Overlay.ts).
 
-import { EqualiserOverlay } from "./Overlay";
+import { holdAdjustTool } from "./Overlay";
 import { EqualiserPanel } from "./Panel";
 import { EXT_ID, KEY, curveKeys, rederivePatch, resetPatch } from "./params";
+import { holdPickDrag } from "./picker";
 import { api, initRuntime } from "./runtime";
 import type { DevelopStoreState, SafelightAPI } from "./safelight";
 import { allStages } from "./stage";
 import { initStore, store } from "./store";
 
 const PANEL_ID = `${EXT_ID}.panel`;
-const OVERLAY_ID = `${EXT_ID}.overlay`;
 
 let unsubscribe: (() => void) | null = null;
+let releaseTools: (() => void)[] = [];
 
 function reset(): void {
   const dev = api().stores.useDevelopStore.getState();
@@ -38,19 +39,14 @@ export function activate(host: SafelightAPI): void {
     title: "Colour Equaliser",
     component: EqualiserPanel,
     defaultDock: { module: "develop", direction: "right", order: 7, width: 268 },
+    modules: ["develop"],
     onReset: reset,
     // The same panel edits a mask's curves and options in the Masking panel's
-    // Adjust tab; the on-image overlay stays the photo's.
+    // Adjust tab; the picker and Adjust on image stay the photo's.
     mask: { component: EqualiserPanel, owns: [...curveKeys(), ...Object.values(KEY)] },
   });
 
-  host.registerSlot({
-    id: OVERLAY_ID,
-    slot: "develop-canvas-overlay",
-    component: EqualiserOverlay,
-    order: 60,
-  });
-
+  releaseTools = [holdPickDrag(), holdAdjustTool()];
   // A bag whose gate disagrees with its curves (a preset that carried only
   // some keys, an edit from another release) is re-derived live; the edit
   // itself is rewritten by the next commit, as any other change would be.
@@ -68,9 +64,10 @@ export function deactivate(): void {
   // dropping them explicitly keeps a re-enable clean.
   try {
     store().getState().setMode(null);
+    for (const release of releaseTools) release();
+    releaseTools = [];
     const host = api();
     for (const stage of allStages()) host.unregisterProcessingStage(stage.id);
-    host.unregisterSlot(OVERLAY_ID);
   } catch {
     /* activate() never ran — nothing to tear down */
   }

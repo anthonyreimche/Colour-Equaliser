@@ -146,9 +146,9 @@ Differences from Ansel to be aware of:
   moving an end node.
 - Small renders take a smaller table level; the field is smooth, so the
   difference is far below what a thumbnail shows.
-- The picker and the on-image marker read display-referred captures (the
-  photo rendered with this stage bypassed for the input, the live view for the
-  output); Ansel reads its scene-linear pipe input. Hue survives the tone
+- The picker and the on-image marker read display-referred captures of the
+  view at its own pixels (with this stage bypassed for the input, as it is for
+  the output); Ansel reads its scene-linear pipe input. Hue survives the tone
   transform closely enough for the graph; the brightness reading is a guide.
 - The LUT viewer, the white-level picker and Ansel's white-level auto-set are
   not ported (the latter two read the scene-linear pipe input, which extensions
@@ -185,7 +185,7 @@ with its dev dependencies installed.
 Install from the SafeLight **Extensions** window, or load this folder via
 Developer Tools ▸ Extensions during development. A **Colour Equaliser** panel
 appears in Develop (right dock). Build from source with `npm install && npm run
-build` (outputs `dist/index.js`). Needs SafeLight 3.2.0 or later.
+build` (outputs `dist/index.js`). Needs SafeLight 3.2.8 or later.
 
 ## License & credits
 

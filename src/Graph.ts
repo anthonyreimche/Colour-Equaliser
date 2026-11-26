@@ -43,6 +43,8 @@ import { api, h } from "./runtime";
 import { displayCss } from "./sample";
 import { store } from "./store";
 
+export const GRAPH_HINT = "Drag a node · Ctrl+click adds one · right-click removes it · double-click resets the curve";
+
 const FRAME_WIDTH = 240;
 
 interface Ink {
@@ -245,15 +247,14 @@ export function EqualiserGraph({ ring, channel }: GraphProps) {
     return () => ro.disconnect();
   }, []);
 
-  // Theme swaps restyle the root's CSS variables in place; watch the root so
-  // the ink re-derives without waiting for the next interaction.
-  useEffect(() => {
-    const bump = () => setEpoch((e) => e + 1);
-    const mo = new MutationObserver(bump);
-    mo.observe(document.documentElement, { attributes: true });
-    mo.observe(document.body, { attributes: true });
-    return () => mo.disconnect();
-  }, []);
+  // The theme writes its CSS variables before it sets the id.
+  useEffect(
+    () =>
+      api().stores.useThemeStore.subscribe((state, previous) => {
+        if (state.activeId !== previous.activeId) setEpoch((e) => e + 1);
+      }),
+    [],
+  );
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -373,6 +374,7 @@ export function EqualiserGraph({ ring, channel }: GraphProps) {
     { ref: wrapRef, style: { width: "100%" } },
     h("canvas", {
       ref: canvasRef,
+      title: GRAPH_HINT,
       style,
       onPointerDown,
       onPointerMove,

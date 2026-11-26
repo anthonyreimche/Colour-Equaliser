@@ -9,7 +9,6 @@
 // mask's in the Masking panel's Adjust tab. The picker and Adjust on image
 // read the photo for its own equaliser, so they show only in the dock.
 
-import type { CSSProperties } from "react";
 import { CHANNELS, type Channel } from "./curve";
 import { INTERPOLATIONS, type Interpolation } from "./field";
 import { EqualiserGraph } from "./Graph";
@@ -17,7 +16,7 @@ import { DEFAULT_PARAMS, type Params } from "./model";
 import { deriveAll, readParams } from "./params";
 import { RINGS, type Ring } from "./rings";
 import { api, h } from "./runtime";
-import { brightnessLabel, startLiveSampler } from "./sample";
+import { brightnessLabel } from "./sample";
 import { store } from "./store";
 
 export const SETTING = { ring: "ring", channel: "channel" } as const;
@@ -37,11 +36,6 @@ const CHANNEL_LABEL: Readonly<Record<Channel, string>> = {
 };
 const INTERPOLATION_LABEL = ["Tetrahedral", "Trilinear", "Pyramid"] as const;
 
-const GRAPH_HINT = "Drag a node · Ctrl+click adds one · right-click removes it · double-click resets the curve";
-const ON_IMAGE_HINT = "Adjust on image: scroll over the photo (Shift coarse, Alt fine), right-click adds a node there";
-
-const HINT_STYLE: CSSProperties = { margin: 0, fontSize: 10, lineHeight: 1.4, color: "var(--color-text-muted)" };
-
 export function readPage(): Page {
   const v = api().settings.get<string>(SETTING.ring, "shadows");
   return (PAGES as readonly string[]).includes(v) ? (v as Page) : "shadows";
@@ -54,17 +48,23 @@ export function readChannel(): Channel {
 
 export function EqualiserPanel() {
   const { useEffect, useState } = api().react;
-  const { Slider } = api().components;
-  const { Button, Select, SegmentedControl, Row, Stack } = api().ui;
+  const { Slider, PickerIcon } = api().components;
+  const { Button, Select, SegmentedControl, Row, Stack, tokens } = api().ui;
   const scope = api().develop.useParamScope();
   const inMask = scope.maskId !== null;
   const mode = store()((s) => s.mode);
   const picker = store()((s) => s.picker);
+  const holdsPickDrag = api().develop.usePickDragHeld();
+  const holdsCanvasTool = api().develop.useCanvasToolHeld();
   const [page, setPage] = useState<Page>(readPage);
   const [channel, setChannel] = useState<Channel>(readChannel);
 
-  useEffect(() => (inMask ? undefined : startLiveSampler()), [inMask]);
   useEffect(() => (inMask ? undefined : () => store().getState().setMode(null)), [inMask]);
+  // Core lets go of either tool on Escape or when another extension takes it.
+  useEffect(() => {
+    if (inMask) return;
+    if ((mode === "pick" && !holdsPickDrag) || (mode === "adjust" && !holdsCanvasTool)) store().getState().setMode(null);
+  }, [inMask, mode, holdsPickDrag, holdsCanvasTool]);
 
   const p = readParams(scope.getParams());
   const live = (): Params => readParams(scope.getParams());
@@ -118,7 +118,7 @@ export function EqualiserPanel() {
       h(
         Row,
         { key: "interpolation", gap: 6 },
-        h("span", { style: { fontSize: 11, color: "var(--color-text-secondary)", whiteSpace: "nowrap" } }, "Interpolation"),
+        h("span", { style: { fontSize: 11, color: tokens.textSecondary, whiteSpace: "nowrap" } }, "Interpolation"),
         h(
           "div",
           { style: { flex: "1 1 auto", minWidth: 0 } },
@@ -153,10 +153,14 @@ export function EqualiserPanel() {
   const tools = h(
     Row,
     { key: "tools", gap: 6 },
-    h(Button, { size: "sm", active: mode === "pick", title: "Mark a colour from the image on the graphs (Esc cancels)", onClick: () => toggle("pick") }, "Pick"),
+    h(
+      Button,
+      { size: "sm", active: mode === "pick", title: "Mark a colour from the image on the graphs (Esc cancels)", onClick: () => toggle("pick") },
+      h(Row, { gap: 4, align: "center" }, h(PickerIcon, { size: 12 }), "Pick"),
+    ),
     h(
       "span",
-      { style: { flex: "1 1 auto", minWidth: 0, fontSize: 10, color: "var(--color-text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } },
+      { style: { flex: "1 1 auto", minWidth: 0, fontSize: 10, color: tokens.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } },
       picker ? brightnessLabel(picker.brightness) : "No sample",
     ),
     h(
@@ -164,7 +168,7 @@ export function EqualiserPanel() {
       {
         size: "sm",
         active: mode === "adjust",
-        title: "Adjust the active curve from the image: hover to mark its hue, scroll to shape the curve there, right-click to add a node (Esc ends)",
+        title: "Adjust the active curve from the image: hover to mark its hue, scroll to shape the curve there (Shift coarse, Alt fine), right-click to add a node (Esc ends)",
         onClick: () => toggle("adjust"),
       },
       "Adjust on image",
@@ -178,6 +182,5 @@ export function EqualiserPanel() {
     channelTabs,
     h(EqualiserGraph, { key: `${ring}/${channel}`, ring, channel }),
     inMask ? null : tools,
-    h("p", { key: "hint", style: HINT_STYLE }, inMask ? GRAPH_HINT : `${GRAPH_HINT} · ${ON_IMAGE_HINT}`),
   );
 }

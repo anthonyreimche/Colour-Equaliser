@@ -1,21 +1,21 @@
-// The develop-canvas overlay: Ansel's colour picker and its on-image
-// adjustment (mouse_moved / scrolled / button_pressed / gui_post_expose),
-// armed from the panel. While picking, a left click marks the sampled hue
-// on every graph and reports its brightness. While adjusting, hovering marks
-// the hue on the active graph and draws Ansel's marker over the image — the
-// input colour inside, the output colour outside, an arc for the curve's
-// offset — the wheel shapes the active curve around that hue (Shift coarse,
-// Alt fine; Ctrl stays the host's), and a right-click adds a node there.
-// Ctrl / ⌘ / Space go click-through so pan and zoom keep working; Esc ends
-// either mode.
+// The develop canvas's on-image tool: Ansel's on-image adjustment
+// (mouse_moved / scrolled / button_pressed / gui_post_expose), armed from the
+// panel. Hovering marks the hue on the active graph and draws Ansel's marker
+// over the image — the input colour inside, the output colour outside, an arc
+// for the curve's offset — the wheel shapes the active curve around that hue
+// (Shift coarse, Alt fine; a Ctrl wheel, which a trackpad pinch also sends,
+// stays the host's), and a right-click adds a node there. The colours come
+// from captures of the view at its own pixels, read through the box the view
+// showed them in, so they are the ones under the pointer at any zoom. The
+// tool is zoomable, so core hands Ctrl / ⌘ / Space to pan and zoom, and ends
+// it on Esc.
 
-import type { CSSProperties, MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from "react";
+import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from "react";
 import {
   addNode,
   hueToCurveX,
   samplePeriodic,
   scrollCurve,
-  wrapHuePi,
   type Channel,
   type CurveNode,
   type ScrollStep,
@@ -24,38 +24,23 @@ import { cursorOffset } from "./Graph";
 import type { Params } from "./model";
 import { deriveAll, readParams } from "./params";
 import { readChannel, readPage } from "./Panel";
+import { readingOf } from "./picker";
 import type { Ring } from "./rings";
 import { api, h } from "./runtime";
-import type { OverlayRect } from "./safelight";
-import { displayCss, patchLinear } from "./sample";
-import { store, type Cursor } from "./store";
-import { linearSrgbToHsb } from "./ucs";
+import type { CanvasTool, OverlayRect2 } from "./safelight";
+import { displayCss, patchLinear, startLiveSampler } from "./sample";
+import { store, type Cursor, type Samples } from "./store";
 
 const COMMIT_DELAY_MS = 300;
 /** Ansel's preview cursor radius. */
 const OUTER_PX = 14;
 
-export interface ClientBox {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-}
-
-/** Client point → image UV through the displayed image rect. `clientWidth /
- *  box.width` is the interface scale (the body zoom), so a zoomed UI still
- *  lands on the pixel under the pointer. Null outside the image. */
-export function pointToUv(
-  clientX: number,
-  clientY: number,
-  box: ClientBox,
-  clientWidth: number,
-  rect: OverlayRect | null,
-): { x: number; y: number } | null {
-  if (!rect || box.width <= 0 || box.height <= 0 || rect.w <= 0 || rect.h <= 0) return null;
-  const scale = clientWidth / box.width;
-  const x = ((clientX - box.left) * scale - rect.x) / rect.w;
-  const y = ((clientY - box.top) * scale - rect.y) / rect.h;
+/** An overlay point → UV across a box in the same layout px (the view's
+ *  frame). Null outside the box. */
+export function pointToUv(point: { x: number; y: number }, rect: OverlayRect2 | null): { x: number; y: number } | null {
+  if (!rect || rect.w <= 0 || rect.h <= 0) return null;
+  const x = (point.x - rect.x) / rect.w;
+  const y = (point.y - rect.y) / rect.h;
   if (x < 0 || x > 1 || y < 0 || y > 1) return null;
   return { x, y };
 }
@@ -75,67 +60,29 @@ function stepOf(e: WheelEvent): ScrollStep {
   return e.shiftKey ? "coarse" : e.altKey ? "fine" : "normal";
 }
 
-interface Sampled {
-  hue: number;
-  brightness: number;
-  inputRgb: Cursor["inputRgb"];
-  outputRgb: Cursor["outputRgb"];
-}
-
-/** The input and output colours at image point (u, v) from the latest
- *  samples, with the input's dt UCS hue and brightness. */
-function sampleAt(uv: { x: number; y: number }): Sampled | null {
-  const { input, output } = store().getState().samples;
-  if (!input) return null;
+/** The input and output colours under an overlay point, read from samples
+ *  of the view through the box the view showed them in, with the input's dt
+ *  UCS hue. Null off the view or without samples. */
+export function readAt(samples: Samples, local: { x: number; y: number }): Omit<Cursor, "local"> | null {
+  const { input, output, view } = samples;
+  const uv = pointToUv(local, view);
+  if (!input || !uv) return null;
   const inputRgb = patchLinear(input, uv.x, uv.y);
   if (!inputRgb) return null;
   const outputRgb = (output && patchLinear(output, uv.x, uv.y)) ?? inputRgb;
-  const hsb = linearSrgbToHsb(inputRgb);
-  if (!Number.isFinite(hsb[0])) return null;
-  return { hue: wrapHuePi(hsb[0]), brightness: hsb[2] < 0 ? 0 : hsb[2] > 1 ? 1 : hsb[2], inputRgb, outputRgb };
+  const reading = readingOf(inputRgb);
+  return reading && { hue: reading.hue, inputRgb, outputRgb };
 }
 
-export function EqualiserOverlay() {
-  const { useEffect, useRef, useState } = api().react;
+export function EqualiserTool() {
+  const { useEffect, useRef } = api().react;
   const dev = api().stores.useDevelopStore;
+  const { rect: viewRect, nonce } = api().develop.useDevelopOverlay();
   const paramBag = dev((s) => s.paramBag);
   const mode = store()((s) => s.mode);
   const cursor = store()((s) => s.cursor);
-  const overlay = api().develop.useDevelopOverlay();
   const ref = useRef<HTMLDivElement | null>(null);
-  const [passthrough, setPassthrough] = useState(false);
   const commitTimer = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (mode === null) return;
-    const held = new Set<string>();
-    const update = () => setPassthrough(held.has("Control") || held.has("Meta") || held.has(" "));
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        store().getState().setMode(null);
-        return;
-      }
-      held.add(e.key);
-      update();
-    };
-    const onKeyUp = (e: KeyboardEvent) => {
-      held.delete(e.key);
-      update();
-    };
-    const onBlur = () => {
-      held.clear();
-      update();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("keyup", onKeyUp);
-    window.addEventListener("blur", onBlur);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("keyup", onKeyUp);
-      window.removeEventListener("blur", onBlur);
-      setPassthrough(false);
-    };
-  }, [mode]);
 
   const commitLater = () => {
     if (commitTimer.current !== null) window.clearTimeout(commitTimer.current);
@@ -153,6 +100,16 @@ export function EqualiserOverlay() {
     },
     [],
   );
+
+  useEffect(() => store().getState().setView(viewRect && { rect: viewRect, nonce }), [viewRect, nonce]);
+  useEffect(() => {
+    const stop = startLiveSampler();
+    return () => {
+      stop();
+      store().getState().setView(null);
+      store().getState().setSamples({ input: null, output: null, view: null });
+    };
+  }, []);
 
   // The wheel is attached natively (non-passive) so the canvas does not zoom
   // underneath; React's onWheel cannot preventDefault.
@@ -175,42 +132,19 @@ export function EqualiserOverlay() {
     return () => el.removeEventListener("wheel", onWheel);
   }, [mode]);
 
-  if (mode === null) return null;
-
-  /** The pointer in the overlay's own layout px and, through the image
-   *  rect, in image UV. */
-  const locate = (clientX: number, clientY: number) => {
-    const el = ref.current;
-    if (!el) return null;
-    const box = el.getBoundingClientRect();
-    const scale = box.width > 0 ? el.clientWidth / box.width : 1;
-    return {
-      local: { x: (clientX - box.left) * scale, y: (clientY - box.top) * scale },
-      uv: pointToUv(clientX, clientY, box, el.clientWidth, overlay.rect),
-    };
-  };
+  if (mode !== "adjust") return null;
 
   const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (mode !== "adjust") return;
-    const at = locate(e.clientX, e.clientY);
-    const s = at?.uv && sampleAt(at.uv);
+    const el = ref.current;
+    if (!el) return;
+    const local = api().develop.framePoint(el, e.clientX, e.clientY);
+    const s = readAt(store().getState().samples, local);
     store()
       .getState()
-      .setCursor(at && s ? { hue: s.hue, inputRgb: s.inputRgb, outputRgb: s.outputRgb, local: at.local } : null);
-  };
-
-  const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (e.button !== 0 || mode !== "pick") return;
-    e.preventDefault();
-    const at = locate(e.clientX, e.clientY);
-    const s = at?.uv && sampleAt(at.uv);
-    if (!s) return;
-    store().getState().setPicker({ hue: s.hue, brightness: s.brightness });
-    store().getState().setMode(null);
+      .setCursor(s && { ...s, local });
   };
 
   const onContextMenu = (e: ReactMouseEvent<HTMLDivElement>) => {
-    if (mode !== "adjust") return;
     e.preventDefault();
     const c = store().getState().cursor;
     if (!c) return;
@@ -224,15 +158,14 @@ export function EqualiserOverlay() {
     void dev.getState().commitEdit("Colour Equaliser add node");
   };
 
-  const style: CSSProperties = {
+  const style = {
     position: "absolute",
     inset: 0,
-    pointerEvents: passthrough ? "none" : "auto",
-    cursor: mode === "pick" ? api().cursors.resolve("pick") : cursor ? "none" : "crosshair",
-  };
+    cursor: cursor ? "none" : api().cursors.resolve("crosshair"),
+  } as const;
 
   let mark = null;
-  if (mode === "adjust" && cursor) {
+  if (cursor) {
     const { ring, channel } = activeCurve();
     mark = marker(cursor, cursorOffset(channel, readParams(paramBag).curves[ring][channel], cursor.hue));
   }
@@ -243,12 +176,25 @@ export function EqualiserOverlay() {
       ref,
       style,
       onPointerMove,
-      onPointerDown,
       onContextMenu,
       onPointerLeave: () => store().getState().setCursor(null),
     },
     mark,
   );
+}
+
+const ADJUST_TOOL: CanvasTool = {
+  overlay: EqualiserTool,
+  zoomable: true,
+  onEscape: () => store().getState().setMode(null),
+};
+
+/** Holds the canvas with the tool while Adjust on image is on, and lets it
+ *  go when it ends. Returns the unsubscribe. */
+export function holdAdjustTool(): () => void {
+  return store().subscribe((state, prev) => {
+    if ((state.mode === "adjust") !== (prev.mode === "adjust")) api().develop.setCanvasTool(state.mode === "adjust" ? ADJUST_TOOL : null);
+  });
 }
 
 /** gui_post_expose's marker at the pointer: an intensity ring, the curve's

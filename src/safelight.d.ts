@@ -6,6 +6,10 @@
 
 import type { ComponentType, CSSProperties, ReactNode } from "react";
 
+export interface ActiveIdState {
+  activeId: string;
+}
+
 export interface StoreApi<T> {
   (): T;
   <U>(selector: (state: T) => U): U;
@@ -36,23 +40,49 @@ export interface DevelopStoreState {
   commitEdit(label: string): Promise<void>;
 }
 
-export interface AppSettings {
-  /** Interface scale — the <body> CSS zoom that client-px coordinates must be
-   *  divided by to reach layout px. */
-  uiScale: number;
-}
-
-export interface OverlayRect {
+export interface OverlayRect2 {
   x: number;
   y: number;
   w: number;
   h: number;
 }
 
-export interface DevelopOverlayState {
-  rect: OverlayRect | null;
-  nonce: number;
+/** An extension's on-image tool that takes the canvas over while it is held. */
+export interface CanvasTool {
+  /** Drawn over the image, inside the view: `rect` is the box the frame
+   *  shows. Reads the canvas mapping with api.develop.useDevelopOverlay. */
+  overlay: ComponentType<{
+    rect: OverlayRect2;
+  }>;
+  /** Whether zoom and pan still reach the canvas under the overlay. */
+  zoomable?: boolean;
+  /** Escape was pressed: core lets the tool go after this. */
+  onEscape?(): void;
 }
+
+/** A point on the canvas, in its pixels, from its top-left corner. */
+export interface CanvasPoint {
+  x: number;
+  y: number;
+}
+
+export interface PickDragTool {
+  /** A press on the image, as it happens. */
+  onPress?(point: CanvasPoint): void;
+  /** A press on the image with the colour the view shows there, sRGB 0-1,
+   *  once the probe answers; never for a press released before that. */
+  onDown?(rgb: readonly [number, number, number], point: CanvasPoint): void;
+  /** The drag, after an onDown. */
+  onMove?(point: CanvasPoint): void;
+  /** The drag ended, after an onDown. */
+  onUp?(): void;
+}
+
+export interface PickerIconProps {
+  size?: number;
+}
+
+declare function PickerIcon({ size }: PickerIconProps): import("react").JSX.Element;
 
 export type GlslType = "float" | "int" | "bool" | "vec2" | "vec3" | "vec4" | "sampler2D";
 
@@ -108,6 +138,8 @@ export interface PanelContribution {
     width?: number;
     height?: number;
   };
+  /** The modules the panel may be docked in; omitted, every module (Safelight 3.2.8). */
+  modules?: readonly string[];
   onReset?: () => void;
   /** Offers the panel in a mask's Adjust tab: each mask that adds it renders
    *  `component`, which edits that mask's values through useParamScope. `owns`
@@ -234,26 +266,77 @@ export interface SafelightAPI {
   components: {
     Slider: ComponentType<SliderProps>;
     Panel: ComponentType<PanelProps>;
+    PickerIcon: typeof PickerIcon;
   };
   ui: UiKit;
   stores: {
     create<T>(init: StateCreator<T>): StoreApi<T>;
     useDevelopStore: StoreApi<DevelopStoreState>;
-    useSettings: StoreApi<AppSettings>;
+    useThemeStore: StoreApi<ActiveIdState>;
   };
   cursors: {
     resolve(token: string): string;
   };
   develop: {
-    useDevelopOverlay(): DevelopOverlayState;
-    captureFrame(params: DevelopParams): Promise<ImageBitmap>;
-    /** The photo rendered off-screen with `params` and the given stage bag —
-     *  here, this stage bypassed, to read the colours it receives. */
-    renderPhotoFrame(
-      photoId: string,
-      params: DevelopParams,
-      paramBag?: Record<string, unknown>,
-    ): Promise<ImageBitmap | null>;
+    /** The frame covers the region the view shows, whatever crop `params`
+     *  carry: in crop mode the whole photo and its margin, as the canvas shows
+     *  it. The frame is for measuring: sRGB, and without the clipping warning, the
+     *  mask overlay and the sharpening preview the view may be showing. Pass
+     *  `{ asShown: true }` for a frame drawn over the canvas: it keeps those
+     *  overlays, and on Linux with a display profile set it is converted to
+     *  the monitor like the canvas is (elsewhere the two match). `paramBag` is
+     *  merged over the photo's extension-stage params for this capture only,
+     *  e.g. a stage's switch to render an auxiliary image (a gain map, a mask)
+     *  aligned to the live view. Neither the params nor the bag reach the live
+     *  view or the core's measurements of it (the histogram, Auto Tone, Auto
+     *  WB, Upright). */
+    captureFrame(params: DevelopParams, options?: {
+      asShown?: boolean;
+      paramBag?: Record<string, unknown>;
+    }): Promise<ImageBitmap>;
+    /** What ColourField's eyedropper reads: the average of the 5×5 pixels
+     *  around `point` (in the canvas's pixels, as the pick-drag tool gives
+     *  them) of a capture of the view, sRGB 0-1, with `paramBag` merged over
+     *  the photo's and over each mask's copy of a stage it names, to leave
+     *  your own effect out of the sample. Null off the frame, without a
+     *  renderer, or when another photo opened before the capture landed.
+     *  Needs Safelight 3.2.8. */
+    sampleView(point: CanvasPoint, paramBag?: Record<string, unknown>): Promise<readonly [number, number, number] | null>;
+    /** React hook: the canvas mapping, for a canvas tool's overlay. `rect` is
+     *  where the view's frame (what captureFrame returns) sits in the
+     *  overlay's layout px, the visible window when zoomed; null until the
+     *  first layout. `nonce` changes whenever the view's geometry does (zoom,
+     *  pan, fit, resize, another photo). */
+    useDevelopOverlay(): { rect: OverlayRect2 | null; nonce: number };
+    /** Hold the develop canvas with an on-image tool (canvas-tool.ts), or with
+     *  null let go of it. While it's held, its `overlay` is drawn over the
+     *  image inside the view, core's own canvas gestures stand aside (zoom
+     *  too, unless `zoomable`), and the live view draws `viewParams` of the
+     *  edit if given. Escape calls `onEscape` and lets it go. One extension
+     *  holds it at a time: the last to set it. It is let go when the
+     *  extension stops. Needs Safelight 3.2.0. */
+    setCanvasTool(tool: CanvasTool | null): void;
+    /** React hook: whether this extension holds the canvas tool. */
+    useCanvasToolHeld(): boolean;
+    /** Hold the canvas's pick-drag tool (an eyedropper or on-image target
+     *  tool), or with null let go of it. While it's held, a press on the image
+     *  calls `tool.onPress` with the point in the canvas's pixels at once;
+     *  with `onDown`, it is also handed the colour the view shows there (sRGB,
+     *  0-1) once the probe answers, then the drag to `onMove` and its end to
+     *  `onUp`. A held Ctrl, Cmd or Space pans instead, and Escape lets go.
+     *  One extension holds it at a time: the last to set it. It is let go when
+     *  the extension stops. */
+    setPickDrag(tool: PickDragTool | null): void;
+    /** React hook: whether this extension holds the pick-drag tool. */
+    usePickDragHeld(): boolean;
+    /** The pointer in `el`'s layout px: the space an overlay's `rect`, the
+     *  mapping helpers and CSS left/top use. Interface scale zooms the page,
+     *  so clientX minus the element's left is off by the zoom. Needs Safelight
+     *  3.2.7. */
+    framePoint(el: Element, clientX: number, clientY: number): {
+      x: number;
+      y: number;
+    };
     /** The mask's scope inside a mask's Adjust tab, the photo's anywhere else. */
     useParamScope(): ParamScope;
   };

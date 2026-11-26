@@ -105,7 +105,7 @@ export function renderer(): Renderer {
     for (const el of findAll(tree, (e) => typeof e.props.ref === "object" && e.props.ref !== null)) {
       const style = (el.props.style ?? {}) as { width?: unknown; height?: unknown };
       const size = (v: unknown) => (typeof v === "number" ? v : 0);
-      const node = el.type === "canvas" ? fakeCanvas(size(style.width), size(style.height)) : {};
+      const node = el.type === "canvas" ? fakeCanvas(size(style.width), size(style.height)) : { addEventListener() {}, removeEventListener() {} };
       if (el.type === "canvas") canvases.push(node as FakeCanvas);
       (el.props.ref as { current: unknown }).current = node;
     }

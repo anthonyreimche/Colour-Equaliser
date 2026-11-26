@@ -6,11 +6,12 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defaultCurve, type Channel, type CurveNode } from "../src/curve";
-import { EqualiserGraph } from "../src/Graph";
+import { EqualiserGraph, GRAPH_HINT } from "../src/Graph";
 import { AXIS_HEIGHT, INSET, plotGeometry } from "../src/graph-model";
 import { DEFAULT_PARAMS, type Params } from "../src/model";
+import { EqualiserTool } from "../src/Overlay";
 import { EqualiserPanel } from "../src/Panel";
-import { deriveAll, readParams } from "../src/params";
+import { deriveAll, KEY, readParams } from "../src/params";
 import type { Ring } from "../src/rings";
 import { initRuntime } from "../src/runtime";
 import type { DevelopParams, DevelopStoreState, ParamScope, SafelightAPI } from "../src/safelight";
@@ -25,12 +26,15 @@ const Select = () => null;
 const SegmentedControl = () => null;
 const Row = () => null;
 const Stack = () => null;
+const PickerIcon = () => null;
 
 /** The API over a photo bag, inside a mask holding `maskBag` when one is given. */
 function rig(photoBag: Record<string, unknown> = {}, maskBag?: Record<string, unknown>) {
+  const held = { pickDrag: false, canvasTool: false };
   const commits: string[] = [];
   const captures: DevelopParams[] = [];
   const renders: Record<string, unknown>[] = [];
+  const view = { rect: { x: 0, y: 0, w: 600, h: 400 } as { x: number; y: number; w: number; h: number } | null, nonce: 1 };
   const settings = new Map<string, unknown>();
   const develop = fakeStore<DevelopStoreState>({
     photoId: "p1",
@@ -42,6 +46,7 @@ function rig(photoBag: Record<string, unknown> = {}, maskBag?: Record<string, un
     commitEdit: async (label) => void commits.push(label),
   });
   const mask = fakeStore({ bag: maskBag ?? {} });
+  const theme = fakeStore({ activeId: "safelight-neutral" });
   const photoScope: ParamScope = {
     maskId: null,
     getParam: (key) => develop.getState().paramBag[key],
@@ -64,23 +69,25 @@ function rig(photoBag: Record<string, unknown> = {}, maskBag?: Record<string, un
       set: (key: string, value: unknown) => void settings.set(key, value),
       onChange: () => () => undefined,
     },
-    components: { Slider, Panel },
-    ui: { Button, Select, SegmentedControl, Row, Stack, tokens: { surface0: "rgb(30, 30, 30)" } },
-    stores: { create: fakeStore, useDevelopStore: develop },
+    components: { Slider, Panel, PickerIcon },
+    ui: { Button, Select, SegmentedControl, Row, Stack, tokens: { surface0: "rgb(30, 30, 30)", textMuted: "muted-token", textSecondary: "secondary-token" } },
+    stores: { create: fakeStore, useDevelopStore: develop, useThemeStore: theme },
+    cursors: { resolve: (token: string) => token },
     develop: {
-      captureFrame: (params: DevelopParams) => {
-        captures.push(params);
+      captureFrame: (params: DevelopParams, options?: { paramBag?: Record<string, unknown> }) => {
+        if (options?.paramBag) renders.push(options.paramBag);
+        else captures.push(params);
         return new Promise<ImageBitmap>(() => undefined);
       },
-      renderPhotoFrame: (_photoId: string, _params: DevelopParams, bag?: Record<string, unknown>) => {
-        renders.push(bag ?? {});
-        return new Promise<ImageBitmap | null>(() => undefined);
-      },
+      useDevelopOverlay: () => view,
+      framePoint: (_el: Element, x: number, y: number) => ({ x, y }),
       useParamScope: () => (maskBag === undefined ? photoScope : maskScope),
+      usePickDragHeld: () => held.pickDrag,
+      useCanvasToolHeld: () => held.canvasTool,
     },
   } as unknown as SafelightAPI);
   initStore();
-  return { develop, mask, commits, captures, renders, settings, mount };
+  return { develop, mask, theme, commits, captures, renders, settings, held, view, mount };
 }
 
 const withCurve = (ring: Ring, channel: Channel, nodes: readonly CurveNode[], p: Params = DEFAULT_PARAMS): Params => ({
@@ -89,7 +96,7 @@ const withCurve = (ring: Ring, channel: Channel, nodes: readonly CurveNode[], p:
 });
 const raised = (y: number) => defaultCurve().map((n, k) => (k === 2 ? { ...n, y } : n));
 
-const buttons = (m: Mounted) => findAll(m.tree, (e) => e.type === Button).map(textOf);
+const buttons = (m: Mounted) => findAll(m.tree, (e) => e.type === Button).map((e) => textOf(e).trim());
 
 let mounted: Mounted | null = null;
 const keep = (m: Mounted) => (mounted = m);
@@ -104,15 +111,84 @@ afterEach(() => {
 });
 
 describe("EqualiserPanel in the dock", () => {
-  it("offers the picker and Adjust on image, and samples the photo for them", () => {
+  it("offers the picker and Adjust on image, and samples nothing while neither is on", () => {
     vi.useFakeTimers();
     const r = rig();
     const m = keep(r.mount(EqualiserPanel, {}));
     expect(buttons(m)).toEqual(["Pick", "Adjust on image"]);
     expect(textOf(m.tree)).toContain("No sample");
     vi.runOnlyPendingTimers();
+    expect(r.captures).toEqual([]);
+    expect(r.renders).toEqual([]);
+  });
+
+  it("samples the view while Adjust on image is on, the input with the stage bypassed, and stops with it", () => {
+    vi.useFakeTimers();
+    const r = rig();
+    store().getState().setMode("adjust");
+    const m = r.mount(EqualiserTool, { rect: { x: -300, y: -200, w: 1200, h: 800 } });
+    vi.runOnlyPendingTimers();
     expect(r.captures.length).toBe(1);
-    expect(r.renders.length).toBe(1);
+    expect(r.renders).toEqual([{ [KEY.on]: 0 }]);
+    expect(store().getState().view?.rect).toEqual(r.view.rect);
+    m.unmount();
+    expect(store().getState().samples).toEqual({ input: null, output: null, view: null });
+    r.develop.setState({ histogram: { v: 2 } });
+    vi.runOnlyPendingTimers();
+    expect(r.captures.length).toBe(1);
+  });
+
+  it("explains the graph and Adjust on image in tooltips, with no hint text of its own", () => {
+    const r = rig();
+    const m = keep(r.mount(EqualiserPanel, {}));
+    expect(findAll(m.tree, (e) => e.type === "p")).toEqual([]);
+    expect(findAll(m.tree, (e) => e.type === EqualiserGraph)).toHaveLength(1);
+    const adjust = findAll(m.tree, (e) => e.type === Button && textOf(e) === "Adjust on image")[0];
+    expect(adjust.props.title).toMatch(/Shift.*Alt/);
+  });
+
+  it("colours its sample label and option labels from the ui tokens", () => {
+    const r = rig();
+    r.settings.set("ring", "options");
+    const options = keep(r.mount(EqualiserPanel, {}));
+    expect(findAll(options.tree, (e) => e.type === "span").map((e) => (e.props.style as { color?: string }).color)).toEqual(["secondary-token"]);
+    options.unmount();
+    r.settings.delete("ring");
+    const dock = keep(r.mount(EqualiserPanel, {}));
+    const sample = findAll(dock.tree, (e) => e.type === "span")[0];
+    expect((sample.props.style as { color?: string }).color).toBe("muted-token");
+  });
+
+  it("shows Pick as a kit Button with the picker icon, active while picking", () => {
+    const r = rig();
+    r.held.pickDrag = true;
+    store().getState().setMode("pick");
+    const m = keep(r.mount(EqualiserPanel, {}));
+    const pick = findAll(m.tree, (e) => e.type === Button && textOf(e).trim() === "Pick")[0];
+    expect(findAll(pick, (e) => e.type === PickerIcon)).toHaveLength(1);
+    expect(pick.props.active).toBe(true);
+  });
+
+  it("ends Pick once core lets the pick-drag tool go (Esc, another picker), not while it holds it", () => {
+    const r = rig();
+    r.held.pickDrag = true;
+    store().getState().setMode("pick");
+    r.mount(EqualiserPanel, {});
+    expect(store().getState().mode).toBe("pick");
+    r.held.pickDrag = false;
+    r.mount(EqualiserPanel, {});
+    expect(store().getState().mode).toBeNull();
+  });
+
+  it("ends Adjust on image once core lets the canvas tool go (Esc, another tool)", () => {
+    const r = rig();
+    r.held.canvasTool = true;
+    store().getState().setMode("adjust");
+    r.mount(EqualiserPanel, {});
+    expect(store().getState().mode).toBe("adjust");
+    r.held.canvasTool = false;
+    r.mount(EqualiserPanel, {});
+    expect(store().getState().mode).toBeNull();
   });
 
   it("clears the on-image mode when it closes", () => {
@@ -144,6 +220,13 @@ describe("EqualiserPanel in a mask", () => {
     expect(findAll(m.tree, (e) => e.type === EqualiserGraph).map((e) => [e.props.ring, e.props.channel])).toEqual([
       ["shadows", "saturation"],
     ]);
+  });
+
+  it("leaves the photo's Pick alone though it holds no tool", () => {
+    const r = rig({}, {});
+    store().getState().setMode("pick");
+    r.mount(EqualiserPanel, {});
+    expect(store().getState().mode).toBe("pick");
   });
 
   it("leaves the photo's on-image mode alone when it closes", () => {
@@ -198,6 +281,25 @@ describe("EqualiserGraph", () => {
     store().getState().setMode("adjust");
     store().getState().setCursor({ hue: -2, inputRgb: [0.2, 0.3, 0.4], outputRgb: [0.3, 0.3, 0.3], local: { x: 5, y: 5 } });
   };
+
+  it("carries the how-to as the canvas's tooltip", () => {
+    const r = rig();
+    const m = keep(r.mount(EqualiserGraph, { ring: "shadows", channel: "saturation" }));
+    expect(findAll(m.tree, (e) => e.type === "canvas")[0].props.title).toBe(GRAPH_HINT);
+  });
+
+  it("follows the active theme through the theme store, not the document's attributes", () => {
+    const observer = vi.fn(function Observer() {
+      return { observe: vi.fn(), disconnect: vi.fn() };
+    });
+    vi.stubGlobal("MutationObserver", observer);
+    const r = rig();
+    const subscribe = vi.spyOn(r.theme, "subscribe");
+    const m = r.mount(EqualiserGraph, { ring: "shadows", channel: "saturation" });
+    expect(observer).not.toHaveBeenCalled();
+    expect(subscribe).toHaveBeenCalledTimes(1);
+    m.unmount();
+  });
 
   it("in the dock marks the photo's picker and its on-image cursor", () => {
     const r = rig();
