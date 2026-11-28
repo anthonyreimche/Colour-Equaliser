@@ -23,7 +23,7 @@ import {
 import { cursorOffset } from "./Graph";
 import type { Params } from "./model";
 import { deriveAll, readParams } from "./params";
-import { readChannel, readPage } from "./Panel";
+import { readChannel, readRing } from "./Panel";
 import { readingOf } from "./picker";
 import type { Ring } from "./rings";
 import { api, h } from "./runtime";
@@ -45,11 +45,9 @@ export function pointToUv(point: { x: number; y: number }, rect: OverlayRect2 | 
   return { x, y };
 }
 
-/** The curve the panel is showing; the options page keeps the last ring's
- *  midtones so the wheel still has a target. */
+/** The curve the panel is showing. */
 function activeCurve(): { ring: Ring; channel: Channel } {
-  const page = readPage();
-  return { ring: page === "options" ? "midtones" : page, channel: readChannel() };
+  return { ring: readRing(), channel: readChannel() };
 }
 
 function withCurve(p: Params, ring: Ring, channel: Channel, nodes: readonly CurveNode[]): Params {

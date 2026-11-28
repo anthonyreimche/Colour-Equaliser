@@ -55,9 +55,11 @@ Ansel's, in Ansel's order:
   active curve around that hue (Shift = coarse, Alt = fine; Ctrl stays the
   app's pan/zoom); **right-click** adds a node there. One scroll gesture is one
   undo entry. Esc or the button ends the mode.
-- **Options**: White level (EV, Ansel's default +1), Brightness smoothing (%),
-  Saturation smoothing, Hue smoothing (radians), Neutral protection,
-  Interpolation (tetrahedral / trilinear / pyramid).
+- **Options**, a collapsed section below the graph (as darktable's colour
+  equalizer now has it, so the graph never hides): White level (EV, Ansel's
+  default +1), Brightness smoothing (%), Saturation smoothing, Hue smoothing
+  (radians), Neutral protection, Interpolation (tetrahedral / trilinear /
+  pyramid).
 - **In masks:** add Colour Equaliser to a mask from the Masking panel's Adjust
   tab to run a second equaliser inside that mask only, with its own curves and
   options. The mask's panel has everything the dock's has except Pick, Adjust

@@ -149,14 +149,43 @@ describe("EqualiserPanel in the dock", () => {
 
   it("colours its sample label and option labels from the ui tokens", () => {
     const r = rig();
+    const m = keep(r.mount(EqualiserPanel, {}));
+    expect(findAll(m.tree, (e) => e.type === "span").map((e) => (e.props.style as { color?: string }).color)).toEqual([
+      "muted-token",
+      "secondary-token",
+    ]);
+  });
+
+  it("tabs the rings only, and keeps the options in a collapsed Options section below the graph", () => {
+    const r = rig();
+    const m = keep(r.mount(EqualiserPanel, {}));
+    const tabs = findAll(m.tree, (e) => e.type === SegmentedControl).map((e) =>
+      (e.props.options as { value: string }[]).map((o) => o.value),
+    );
+    expect(tabs).toEqual([
+      ["shadows", "midtones", "highlights"],
+      ["saturation", "brightness", "hue"],
+    ]);
+    const order = findAll(m.tree, (e) => e.type === EqualiserGraph || e.type === Panel).map((e) => e.type);
+    expect(order).toEqual([EqualiserGraph, Panel]);
+    const options = findAll(m.tree, (e) => e.type === Panel)[0];
+    expect(options.props).toMatchObject({ title: "Options", defaultOpen: false });
+    expect(findAll(options, (e) => e.type === Slider).map((e) => e.props.label)).toEqual([
+      "White level",
+      "Brightness smoothing",
+      "Saturation smoothing",
+      "Hue smoothing",
+      "Neutral protection",
+    ]);
+    expect(findAll(options, (e) => e.type === Select)).toHaveLength(1);
+  });
+
+  it("opens on Shadows when the saved tab is the Options tab of earlier releases", () => {
+    const r = rig();
     r.settings.set("ring", "options");
-    const options = keep(r.mount(EqualiserPanel, {}));
-    expect(findAll(options.tree, (e) => e.type === "span").map((e) => (e.props.style as { color?: string }).color)).toEqual(["secondary-token"]);
-    options.unmount();
-    r.settings.delete("ring");
-    const dock = keep(r.mount(EqualiserPanel, {}));
-    const sample = findAll(dock.tree, (e) => e.type === "span")[0];
-    expect((sample.props.style as { color?: string }).color).toBe("muted-token");
+    const m = keep(r.mount(EqualiserPanel, {}));
+    expect(findAll(m.tree, (e) => e.type === SegmentedControl)[0].props.value).toBe("shadows");
+    expect(findAll(m.tree, (e) => e.type === EqualiserGraph).map((e) => e.props.ring)).toEqual(["shadows"]);
   });
 
   it("shows Pick as a kit Button with the picker icon, active while picking", () => {
@@ -241,7 +270,6 @@ describe("EqualiserPanel in a mask", () => {
     const photo = deriveAll({ ...DEFAULT_PARAMS, whiteLevel: 1.5 });
     const own = { ...DEFAULT_PARAMS, whiteLevel: -1 };
     const r = rig(photo, deriveAll(own));
-    r.settings.set("ring", "options");
     const m = keep(r.mount(EqualiserPanel, {}));
     const white = findAll(m.tree, (e) => e.type === Slider && e.props.label === "White level")[0].props as {
       value: number;

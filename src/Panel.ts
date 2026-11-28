@@ -1,9 +1,11 @@
-// The Develop panel: Ansel's ring tabs (shadows / midtones / highlights /
-// options) over its channel tabs (saturation / brightness / hue) over the
-// graph, then the picker and the adjust-on-image switch; the options page
-// carries the white level, the three smoothing radii, the neutral protection
-// and the interpolation. Sliders write the bag live and commit on release.
-// The active tabs are extension settings, not edits.
+// The Develop panel: Ansel's ring tabs (shadows / midtones / highlights) over
+// its channel tabs (saturation / brightness / hue) over the graph, then the
+// picker and the adjust-on-image switch, then a collapsed Options section with
+// the white level, the three smoothing radii, the neutral protection and the
+// interpolation. The options sit below the graph rather than on a tab of their
+// own, as darktable's colour equalizer now has them, so the graph never hides.
+// Sliders write the bag live and commit on release. The active tabs are
+// extension settings, not edits.
 //
 // It edits whatever useParamScope hands it: the photo's bag in the dock, a
 // mask's in the Masking panel's Adjust tab. The picker and Adjust on image
@@ -21,13 +23,10 @@ import { store } from "./store";
 
 export const SETTING = { ring: "ring", channel: "channel" } as const;
 
-type Page = Ring | "options";
-const PAGES: readonly Page[] = [...RINGS, "options"];
-const PAGE_LABEL: Readonly<Record<Page, string>> = {
+const RING_LABEL: Readonly<Record<Ring, string>> = {
   shadows: "Shadows",
   midtones: "Midtones",
   highlights: "Highlights",
-  options: "Options",
 };
 const CHANNEL_LABEL: Readonly<Record<Channel, string>> = {
   saturation: "Saturation",
@@ -36,9 +35,11 @@ const CHANNEL_LABEL: Readonly<Record<Channel, string>> = {
 };
 const INTERPOLATION_LABEL = ["Tetrahedral", "Trilinear", "Pyramid"] as const;
 
-export function readPage(): Page {
+/** The saved ring tab; Shadows for anything else, such as the Options tab
+ *  earlier releases saved. */
+export function readRing(): Ring {
   const v = api().settings.get<string>(SETTING.ring, "shadows");
-  return (PAGES as readonly string[]).includes(v) ? (v as Page) : "shadows";
+  return (RINGS as readonly string[]).includes(v) ? (v as Ring) : "shadows";
 }
 
 export function readChannel(): Channel {
@@ -48,7 +49,7 @@ export function readChannel(): Channel {
 
 export function EqualiserPanel() {
   const { useEffect, useState } = api().react;
-  const { Slider, PickerIcon } = api().components;
+  const { Panel, Slider, PickerIcon } = api().components;
   const { Button, Select, SegmentedControl, Row, Stack, tokens } = api().ui;
   const scope = api().develop.useParamScope();
   const inMask = scope.maskId !== null;
@@ -56,7 +57,7 @@ export function EqualiserPanel() {
   const picker = store()((s) => s.picker);
   const holdsPickDrag = api().develop.usePickDragHeld();
   const holdsCanvasTool = api().develop.useCanvasToolHeld();
-  const [page, setPage] = useState<Page>(readPage);
+  const [ring, setRing] = useState<Ring>(readRing);
   const [channel, setChannel] = useState<Channel>(readChannel);
 
   useEffect(() => (inMask ? undefined : () => store().getState().setMode(null)), [inMask]);
@@ -90,25 +91,26 @@ export function EqualiserPanel() {
       onCommit: () => commit(label.toLowerCase()),
     });
 
-  const pageTabs = h(SegmentedControl, {
-    key: "pages",
-    value: page,
+  const ringTabs = h(SegmentedControl, {
+    key: "rings",
+    value: ring,
     size: "sm",
-    options: PAGES.map((value) => ({ value, label: PAGE_LABEL[value] })),
+    options: RINGS.map((value) => ({ value, label: RING_LABEL[value] })),
     onChange: (v: string) => {
-      setPage(v as Page);
+      setRing(v as Ring);
       api().settings.set(SETTING.ring, v);
     },
   });
 
-  if (page === "options") {
-    return h(
+  const options = h(
+    Panel,
+    { key: "options", title: "Options", defaultOpen: false },
+    h(
       Stack,
-      { gap: 6, style: { padding: "6px 8px 8px" } },
-      pageTabs,
+      { gap: 6 },
       h(
         "div",
-        { key: "options", style: { display: "flex", flexDirection: "column", gap: 1 } },
+        { key: "sliders", style: { display: "flex", flexDirection: "column", gap: 1 } },
         slider("White level", "whiteLevel", -2, 8, 0.01),
         slider("Brightness smoothing", "sigmaL", 1, 100, 1),
         slider("Saturation smoothing", "sigmaRho", 0.01, 2, 0.01),
@@ -133,10 +135,9 @@ export function EqualiserPanel() {
           }),
         ),
       ),
-    );
-  }
+    ),
+  );
 
-  const ring: Ring = page;
   const channelTabs = h(SegmentedControl, {
     key: "channels",
     value: channel,
@@ -176,11 +177,16 @@ export function EqualiserPanel() {
   );
 
   return h(
-    Stack,
-    { gap: 6, style: { padding: "6px 8px 8px" } },
-    pageTabs,
-    channelTabs,
-    h(EqualiserGraph, { key: `${ring}/${channel}`, ring, channel }),
-    inMask ? null : tools,
+    "div",
+    { style: { display: "flex", flexDirection: "column" } },
+    h(
+      Stack,
+      { key: "curves", gap: 6, style: { padding: "6px 8px 8px" } },
+      ringTabs,
+      channelTabs,
+      h(EqualiserGraph, { key: `${ring}/${channel}`, ring, channel }),
+      inMask ? null : tools,
+    ),
+    options,
   );
 }

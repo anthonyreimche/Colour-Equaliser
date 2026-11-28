@@ -1021,154 +1021,156 @@ function It({ ring: e, channel: t }) {
 var Lt = {
 	ring: "ring",
 	channel: "channel"
-}, Rt = [...R, "options"], zt = {
+}, Rt = {
 	shadows: "Shadows",
 	midtones: "Midtones",
-	highlights: "Highlights",
-	options: "Options"
-}, Bt = {
+	highlights: "Highlights"
+}, zt = {
 	saturation: "Saturation",
 	brightness: "Brightness",
 	hue: "Hue"
-}, Vt = [
+}, Bt = [
 	"Tetrahedral",
 	"Trilinear",
 	"Pyramid"
 ];
-function Ht() {
+function Vt() {
 	let e = q().settings.get(Lt.ring, "shadows");
-	return Rt.includes(e) ? e : "shadows";
+	return R.includes(e) ? e : "shadows";
 }
-function Ut() {
+function Ht() {
 	let e = q().settings.get(Lt.channel, "saturation");
 	return N.includes(e) ? e : "saturation";
 }
-function Wt() {
-	let { useEffect: e, useState: t } = q().react, { Slider: n, PickerIcon: r } = q().components, { Button: i, Select: a, SegmentedControl: o, Row: s, Stack: c, tokens: l } = q().ui, u = q().develop.useParamScope(), d = u.maskId !== null, f = Y()((e) => e.mode), p = Y()((e) => e.picker), m = q().develop.usePickDragHeld(), h = q().develop.useCanvasToolHeld(), [g, _] = t(Ht), [v, y] = t(Ut);
-	e(() => d ? void 0 : () => Y().getState().setMode(null), [d]), e(() => {
-		d || (f === "pick" && !m || f === "adjust" && !h) && Y().getState().setMode(null);
+function Ut() {
+	let { useEffect: e, useState: t } = q().react, { Panel: n, Slider: r, PickerIcon: i } = q().components, { Button: a, Select: o, SegmentedControl: s, Row: c, Stack: l, tokens: u } = q().ui, d = q().develop.useParamScope(), f = d.maskId !== null, p = Y()((e) => e.mode), m = Y()((e) => e.picker), h = q().develop.usePickDragHeld(), g = q().develop.useCanvasToolHeld(), [_, v] = t(Vt), [y, b] = t(Ht);
+	e(() => f ? void 0 : () => Y().getState().setMode(null), [f]), e(() => {
+		f || (p === "pick" && !h || p === "adjust" && !g) && Y().getState().setMode(null);
 	}, [
-		d,
 		f,
-		m,
-		h
+		p,
+		h,
+		g
 	]);
-	let b = G(u.getParams()), x = () => G(u.getParams()), S = (e) => u.setParams(K(e)), C = (e) => u.commit(`Colour Equaliser ${e}`), w = (e, t, r, i, a) => J(n, {
+	let x = G(d.getParams()), S = () => G(d.getParams()), C = (e) => d.setParams(K(e)), w = (e) => d.commit(`Colour Equaliser ${e}`), T = (e, t, n, i, a) => J(r, {
 		key: t,
 		label: e,
-		value: b[t],
-		min: r,
+		value: x[t],
+		min: n,
 		max: i,
 		step: a,
 		defaultValue: V[t],
-		onChange: (e) => S({
-			...x(),
+		onChange: (e) => C({
+			...S(),
 			[t]: e
 		}),
-		onCommit: () => C(e.toLowerCase())
-	}), T = J(o, {
-		key: "pages",
-		value: g,
+		onCommit: () => w(e.toLowerCase())
+	}), E = J(s, {
+		key: "rings",
+		value: _,
 		size: "sm",
-		options: Rt.map((e) => ({
+		options: R.map((e) => ({
 			value: e,
-			label: zt[e]
+			label: Rt[e]
 		})),
 		onChange: (e) => {
-			_(e), q().settings.set(Lt.ring, e);
+			v(e), q().settings.set(Lt.ring, e);
 		}
-	});
-	if (g === "options") return J(c, {
-		gap: 6,
-		style: { padding: "6px 8px 8px" }
-	}, T, J("div", {
+	}), ee = J(n, {
 		key: "options",
+		title: "Options",
+		defaultOpen: !1
+	}, J(l, { gap: 6 }, J("div", {
+		key: "sliders",
 		style: {
 			display: "flex",
 			flexDirection: "column",
 			gap: 1
 		}
-	}, w("White level", "whiteLevel", -2, 8, .01), w("Brightness smoothing", "sigmaL", 1, 100, 1), w("Saturation smoothing", "sigmaRho", .01, 2, .01), w("Hue smoothing", "sigmaTheta", .01, 6.28, .01), w("Neutral protection", "neutralProtection", 0, 2, .01)), J(s, {
+	}, T("White level", "whiteLevel", -2, 8, .01), T("Brightness smoothing", "sigmaL", 1, 100, 1), T("Saturation smoothing", "sigmaRho", .01, 2, .01), T("Hue smoothing", "sigmaTheta", .01, 6.28, .01), T("Neutral protection", "neutralProtection", 0, 2, .01)), J(c, {
 		key: "interpolation",
 		gap: 6
 	}, J("span", { style: {
 		fontSize: 11,
-		color: l.textSecondary,
+		color: u.textSecondary,
 		whiteSpace: "nowrap"
 	} }, "Interpolation"), J("div", { style: {
 		flex: "1 1 auto",
 		minWidth: 0
-	} }, J(a, {
-		value: String(b.interpolation),
+	} }, J(o, {
+		value: String(x.interpolation),
 		ariaLabel: "Interpolation",
 		options: et.map((e, t) => ({
 			value: String(t),
-			label: Vt[t]
+			label: Bt[t]
 		})),
 		onChange: (e) => {
-			S({
-				...x(),
+			C({
+				...S(),
 				interpolation: Number(e)
-			}), C("interpolation");
+			}), w("interpolation");
 		}
-	}))));
-	let E = g, ee = J(o, {
+	}))))), te = J(s, {
 		key: "channels",
-		value: v,
+		value: y,
 		size: "sm",
 		options: N.map((e) => ({
 			value: e,
-			label: Bt[e]
+			label: zt[e]
 		})),
 		onChange: (e) => {
-			y(e), q().settings.set(Lt.channel, e);
+			b(e), q().settings.set(Lt.channel, e);
 		}
-	}), te = (e) => Y().getState().setMode(f === e ? null : e), ne = J(s, {
+	}), ne = (e) => Y().getState().setMode(p === e ? null : e), D = J(c, {
 		key: "tools",
 		gap: 6
-	}, J(i, {
+	}, J(a, {
 		size: "sm",
-		active: f === "pick",
+		active: p === "pick",
 		title: "Mark a colour from the image on the graphs (Esc cancels)",
-		onClick: () => te("pick")
-	}, J(s, {
+		onClick: () => ne("pick")
+	}, J(c, {
 		gap: 4,
 		align: "center"
-	}, J(r, { size: 12 }), "Pick")), J("span", { style: {
+	}, J(i, { size: 12 }), "Pick")), J("span", { style: {
 		flex: "1 1 auto",
 		minWidth: 0,
 		fontSize: 10,
-		color: l.textMuted,
+		color: u.textMuted,
 		overflow: "hidden",
 		textOverflow: "ellipsis",
 		whiteSpace: "nowrap"
-	} }, p ? Et(p.brightness) : "No sample"), J(i, {
+	} }, m ? Et(m.brightness) : "No sample"), J(a, {
 		size: "sm",
-		active: f === "adjust",
+		active: p === "adjust",
 		title: "Adjust the active curve from the image: hover to mark its hue, scroll to shape the curve there (Shift coarse, Alt fine), right-click to add a node (Esc ends)",
-		onClick: () => te("adjust")
+		onClick: () => ne("adjust")
 	}, "Adjust on image"));
-	return J(c, {
+	return J("div", { style: {
+		display: "flex",
+		flexDirection: "column"
+	} }, J(l, {
+		key: "curves",
 		gap: 6,
 		style: { padding: "6px 8px 8px" }
-	}, T, ee, J(It, {
-		key: `${E}/${v}`,
-		ring: E,
-		channel: v
-	}), d ? null : ne);
+	}, E, te, J(It, {
+		key: `${_}/${y}`,
+		ring: _,
+		channel: y
+	}), f ? null : D), ee);
 }
 //#endregion
 //#region src/picker.ts
-function Gt(e) {
+function Wt(e) {
 	let [t, , n] = we(e);
 	return Number.isFinite(t) ? {
 		hue: Ne(t),
 		brightness: n < 0 ? 0 : n > 1 ? 1 : n
 	} : null;
 }
-async function Kt(e) {
+async function Gt(e) {
 	try {
-		let t = await q().develop.sampleView(e, { [U.on]: 0 }), n = t && Gt([
+		let t = await q().develop.sampleView(e, { [U.on]: 0 }), n = t && Wt([
 			M(t[0]),
 			M(t[1]),
 			M(t[2])
@@ -1179,16 +1181,16 @@ async function Kt(e) {
 		console.warn("[colour-equaliser] pick failed:", e);
 	}
 }
-var qt = { onPress: (e) => void Kt(e) };
-function Jt() {
+var Kt = { onPress: (e) => void Gt(e) };
+function qt() {
 	return Y().subscribe((e, t) => {
-		e.mode === "pick" != (t.mode === "pick") && q().develop.setPickDrag(e.mode === "pick" ? qt : null);
+		e.mode === "pick" != (t.mode === "pick") && q().develop.setPickDrag(e.mode === "pick" ? Kt : null);
 	});
 }
 //#endregion
 //#region src/Overlay.ts
-var Yt = 300, Xt = 14;
-function Zt(e, t) {
+var Jt = 300, Yt = 14;
+function Xt(e, t) {
 	if (!t || t.w <= 0 || t.h <= 0) return null;
 	let n = (e.x - t.x) / t.w, r = (e.y - t.y) / t.h;
 	return n < 0 || n > 1 || r < 0 || r > 1 ? null : {
@@ -1196,14 +1198,13 @@ function Zt(e, t) {
 		y: r
 	};
 }
-function Qt() {
-	let e = Ht();
+function Zt() {
 	return {
-		ring: e === "options" ? "midtones" : e,
-		channel: Ut()
+		ring: Vt(),
+		channel: Ht()
 	};
 }
-function $t(e, t, n, r) {
+function Qt(e, t, n, r) {
 	return {
 		...e,
 		curves: {
@@ -1215,26 +1216,26 @@ function $t(e, t, n, r) {
 		}
 	};
 }
-function en(e) {
+function $t(e) {
 	return e.shiftKey ? "coarse" : e.altKey ? "fine" : "normal";
 }
-function tn(e, t) {
-	let { input: n, output: r, view: i } = e, a = Zt(t, i);
+function en(e, t) {
+	let { input: n, output: r, view: i } = e, a = Xt(t, i);
 	if (!n || !a) return null;
 	let o = wt(n, a.x, a.y);
 	if (!o) return null;
-	let s = (r && wt(r, a.x, a.y)) ?? o, c = Gt(o);
+	let s = (r && wt(r, a.x, a.y)) ?? o, c = Wt(o);
 	return c && {
 		hue: c.hue,
 		inputRgb: o,
 		outputRgb: s
 	};
 }
-function nn() {
+function tn() {
 	let { useEffect: e, useRef: t } = q().react, n = q().stores.useDevelopStore, { rect: r, nonce: i } = q().develop.useDevelopOverlay(), a = n((e) => e.paramBag), o = Y()((e) => e.mode), s = Y()((e) => e.cursor), c = t(null), l = t(null), u = () => {
 		l.current !== null && window.clearTimeout(l.current), l.current = window.setTimeout(() => {
 			l.current = null, n.getState().commitEdit("Colour Equaliser scroll");
-		}, Yt);
+		}, Jt);
 	};
 	if (e(() => () => {
 		l.current !== null && (window.clearTimeout(l.current), l.current = null, n.getState().commitEdit("Colour Equaliser scroll"));
@@ -1258,15 +1259,15 @@ function nn() {
 			let t = Y().getState().cursor;
 			if (!t || e.deltaY === 0) return;
 			e.preventDefault(), e.stopPropagation();
-			let { ring: r, channel: i } = Qt(), a = G(n.getState().paramBag), o = Be(a.curves[r][i], i, L(t.hue), e.deltaY < 0 ? 1 : -1, en(e));
-			n.getState().setDynParams(K($t(a, r, i, o))), u();
+			let { ring: r, channel: i } = Zt(), a = G(n.getState().paramBag), o = Be(a.curves[r][i], i, L(t.hue), e.deltaY < 0 ? 1 : -1, $t(e));
+			n.getState().setDynParams(K(Qt(a, r, i, o))), u();
 		};
 		return e.addEventListener("wheel", t, { passive: !1 }), () => e.removeEventListener("wheel", t);
 	}, [o]), o !== "adjust") return null;
 	let d = (e) => {
 		let t = c.current;
 		if (!t) return;
-		let n = q().develop.framePoint(t, e.clientX, e.clientY), r = tn(Y().getState().samples, n);
+		let n = q().develop.framePoint(t, e.clientX, e.clientY), r = en(Y().getState().samples, n);
 		Y().getState().setCursor(r && {
 			...r,
 			local: n
@@ -1275,16 +1276,16 @@ function nn() {
 		e.preventDefault();
 		let t = Y().getState().cursor;
 		if (!t) return;
-		let { ring: r, channel: i } = Qt(), a = G(n.getState().paramBag), o = a.curves[r][i], s = L(t.hue), c = Ie(o, s, F(o, s));
-		c && (n.getState().setDynParams(K($t(a, r, i, c.nodes))), n.getState().commitEdit("Colour Equaliser add node"));
+		let { ring: r, channel: i } = Zt(), a = G(n.getState().paramBag), o = a.curves[r][i], s = L(t.hue), c = Ie(o, s, F(o, s));
+		c && (n.getState().setDynParams(K(Qt(a, r, i, c.nodes))), n.getState().commitEdit("Colour Equaliser add node"));
 	}, p = {
 		position: "absolute",
 		inset: 0,
 		cursor: s ? "none" : q().cursors.resolve("crosshair")
 	}, m = null;
 	if (s) {
-		let { ring: e, channel: t } = Qt();
-		m = on(s, Ft(t, G(a).curves[e][t], s.hue));
+		let { ring: e, channel: t } = Zt();
+		m = an(s, Ft(t, G(a).curves[e][t], s.hue));
 	}
 	return J("div", {
 		ref: c,
@@ -1294,18 +1295,18 @@ function nn() {
 		onPointerLeave: () => Y().getState().setCursor(null)
 	}, m);
 }
-var rn = {
-	overlay: nn,
+var nn = {
+	overlay: tn,
 	zoomable: !0,
 	onEscape: () => Y().getState().setMode(null)
 };
-function an() {
+function rn() {
 	return Y().subscribe((e, t) => {
-		e.mode === "adjust" != (t.mode === "adjust") && q().develop.setCanvasTool(e.mode === "adjust" ? rn : null);
+		e.mode === "adjust" != (t.mode === "adjust") && q().develop.setCanvasTool(e.mode === "adjust" ? nn : null);
 	});
 }
-function on(e, t) {
-	let n = Xt, r = n * .55, i = n * 1.55, a = 26.7, o = 57.4, s = o / 2, c = Tt(e.outputRgb), l = Tt(e.inputRgb), u = 2 * Math.PI * Math.abs(t), d = -Math.PI / 2 + (t > 0 ? u : -u), f = Math.abs(t) > 1e-4 ? J("path", {
+function an(e, t) {
+	let n = Yt, r = n * .55, i = n * 1.55, a = 26.7, o = 57.4, s = o / 2, c = Tt(e.outputRgb), l = Tt(e.inputRgb), u = 2 * Math.PI * Math.abs(t), d = -Math.PI / 2 + (t > 0 ? u : -u), f = Math.abs(t) > 1e-4 ? J("path", {
 		key: "arc",
 		d: `M ${s} 7 A ${i} ${i} 0 ${+(u > Math.PI)} ${+(t > 0)} ${s + i * Math.cos(d)} ${s + i * Math.sin(d)}`,
 		fill: "none",
@@ -1358,13 +1359,13 @@ function on(e, t) {
 }
 //#endregion
 //#region src/glsl.ts
-function sn(e) {
+function on(e) {
 	let t = e.toPrecision(10);
 	if (!t.includes("e")) return t.includes(".") ? t : `${t}.0`;
 	let [n, r] = t.split("e");
 	return `${n.includes(".") ? n : `${n}.0`}e${r}`;
 }
-var Z = sn, cn = (e) => `vec2(${e.map(Z).join(", ")})`, ln = (e) => `vec3(${e.map(Z).join(", ")})`, un = (e) => `mat3(${[
+var Z = on, sn = (e) => `vec2(${e.map(Z).join(", ")})`, cn = (e) => `vec3(${e.map(Z).join(", ")})`, ln = (e) => `mat3(${[
 	0,
 	3,
 	6,
@@ -1374,14 +1375,14 @@ var Z = sn, cn = (e) => `vec2(${e.map(Z).join(", ")})`, ln = (e) => `vec3(${e.ma
 	2,
 	5,
 	8
-].map((t) => Z(e[t])).join(", ")})`, dn = Z(Math.PI), Q = Z(2 * Math.PI), fn = `
+].map((t) => Z(e[t])).join(", ")})`, un = Z(Math.PI), Q = Z(2 * Math.PI), dn = `
 float ceYOfLStar(float L) {
   return pow(${Z(b)} * L / (${Z(v)} - L), ${Z(x)});
 }
 float ceSafeDiv(float d) { return d >= 0.0 ? max(${Z(ce)}, d) : min(-${Z(ce)}, d); }
 float ceWrap2Pi(float h) { return h - ${Q} * floor(h / ${Q}); }
-float ceWrapHuePi(float h) { return ceWrap2Pi(h + ${dn}) - ${dn}; }
-float ceWrapPi(float x) { return x - ${Q} * floor((x + ${dn}) / ${Q}); }
+float ceWrapHuePi(float h) { return ceWrap2Pi(h + ${un}) - ${un}; }
+float ceWrapPi(float x) { return x - ${Q} * floor((x + ${un}) / ${Q}); }
 // (J, C, H radians) -> xyY D65; black stays black rather than 0/0.
 vec3 ceJchToXyY(vec3 jch) {
   float L = jch.x * ${Z(A)};
@@ -1391,8 +1392,8 @@ vec3 ceJchToXyY(vec3 jch) {
   vec2 p = M * vec2(cos(jch.z), sin(jch.z));
   vec2 uvs = vec2(${Z(k[0])} * p.x + ${Z(k[1])} * p.y,
                   ${Z(k[2])} * p.x + ${Z(k[3])} * p.y);
-  vec2 uv = -${cn(O)} * uvs / (abs(uvs) - ${cn(D)});
-  vec3 xyD = ${ln(ie)} * uv.x + ${ln(ae)} * uv.y + ${ln(oe)};
+  vec2 uv = -${sn(O)} * uvs / (abs(uvs) - ${sn(D)});
+  vec3 xyD = ${cn(ie)} * uv.x + ${cn(ae)} * uv.y + ${cn(oe)};
   return vec3(xyD.xy / ceSafeDiv(xyD.z), L > 0.0 ? ceYOfLStar(L) : 0.0);
 }
 vec3 ceXyYToXyz(vec3 xyY) {
@@ -1418,8 +1419,8 @@ float ceHlgEotf1(float e) {
 vec3 ceHlgEotf(vec3 e) { return vec3(ceHlgEotf1(e.x), ceHlgEotf1(e.y), ceHlgEotf1(e.z)); }
 // XYZ D65 -> the table's code values: CAT16 to D50, the profile's matrix, HLG.
 vec3 ceXyzToLutRgb(vec3 xyz) {
-  const mat3 cat16 = ${un(a)};
-  const mat3 toRec2020 = ${un(p)};
+  const mat3 cat16 = ${ln(a)};
+  const mat3 toRec2020 = ${ln(p)};
   return ceHlgOetf(toRec2020 * (cat16 * xyz));
 }
 vec3 ceHsbToLutRgb(vec3 hsb) { return ceXyzToLutRgb(ceHsbToXyz(hsb)); }
@@ -1459,16 +1460,16 @@ float ceWendland(float d) {
   float t = 1.0 - d;
   return t * t * t * t * (4.0 * d + 1.0);
 }
-`, pn = (e, t) => `float ${e}(int ring) { return ring == 0 ? ${Z(t[0])} : (ring == 1 ? ${Z(t[1])} : ${Z(t[2])}); }`, mn = `
-${pn("ceRingBrightness", R.map((e) => z[e]))}
-${pn("ceRefSat", R.map((e) => Ue[e]))}
-${pn("ceAxisRgb", R.map((e) => We(z[e])))}
-float ceCurveXToHue(float x) { return ceWrapHuePi((360.0 * x + ${Z(20)}) * ${dn} / 180.0); }
+`, fn = (e, t) => `float ${e}(int ring) { return ring == 0 ? ${Z(t[0])} : (ring == 1 ? ${Z(t[1])} : ${Z(t[2])}); }`, pn = `
+${fn("ceRingBrightness", R.map((e) => z[e]))}
+${fn("ceRefSat", R.map((e) => Ue[e]))}
+${fn("ceAxisRgb", R.map((e) => We(z[e])))}
+float ceCurveXToHue(float x) { return ceWrapHuePi((360.0 * x + ${Z(20)}) * ${un} / 180.0); }
 // Channel 2 (hue) reads a shift in radians; 0 and 1 (saturation, brightness) a gain in [0, 2].
 float ceChannelValue(int channel, float y) {
   return channel == 2 ? (y - 0.5) * ${Q} : clamp(y * 2.0, 0.0, 2.0);
 }
-`, hn = R.flatMap((e) => N.map((t) => `${e}${ot[t]}`)), gn = (e) => `vec4[10](${Array.from({ length: 10 }, (t, n) => `${e}${n}`).join(", ")})`, _n = hn.map((e, t) => `${t === 0 ? "if" : "else if"} (curve == ${t}) { n = ${gn(e)}; count = ${e}Count; }`).join("\n  "), vn = `
+`, mn = R.flatMap((e) => N.map((t) => `${e}${ot[t]}`)), hn = (e) => `vec4[10](${Array.from({ length: 10 }, (t, n) => `${e}${n}`).join(", ")})`, gn = mn.map((e, t) => `${t === 0 ? "if" : "else if"} (curve == ${t}) { n = ${hn(e)}; count = ${e}Count; }`).join("\n  "), _n = `
 // Node k of a curve packed two per vec4.
 vec2 ceNode(vec4 n[10], int k) {
   vec4 c = n[k / 2];
@@ -1534,10 +1535,10 @@ float ceHermite(vec4 n[10], int count, float x) {
 float ceSample(int curve, float x) {
   vec4 n[10];
   int count = 0;
-  ${_n}
+  ${gn}
   return count < 2 ? 0.5 : ceHermite(n, count, x);
 }
-`, yn = `
+`, vn = `
 // The largest level <= 64 whose cube fits the target's texels, never below 2.
 highp int ceLutLevel(highp int texels) {
   highp int l = min(64, int(floor(pow(float(texels), 1.0 / 3.0))) + 1);
@@ -1590,7 +1591,7 @@ vec3 ceInterp(sampler2D lut, highp int w, highp int level, vec3 n, int mode) {
   if (b > r) return (1.0 - g) * c000 + (g - b) * c010 + (b - r) * c011 + r * c111;
   return (1.0 - g) * c000 + (g - r) * c010 + (r - b) * c110 + b * c111;
 }
-`, bn = `
+`, yn = `
 {
   highp int w = int(1.0 / uTexel.x + 0.5);
   highp ivec2 px = ivec2(vUv / uTexel);
@@ -1618,7 +1619,7 @@ vec3 ceInterp(sampler2D lut, highp int w, highp int level, vec3 n, int mode) {
     c = (i - 2 * a) == 0 ? p : vec3(q.x - p.x, scale, ceWrapPi(shift));
   }
 }
-`, xn = `
+`, bn = `
 {
   highp int w = int(1.0 / uTexel.x + 0.5);
   highp int hgt = int(1.0 / uTexel.y + 0.5);
@@ -1692,15 +1693,15 @@ vec3 ceInterp(sampler2D lut, highp int w, highp int level, vec3 n, int mode) {
   }
 }
 `;
-function Sn(e) {
+function xn(e) {
 	return `
 {
   if (on > 0.5) {
     highp ivec2 sz = textureSize(${e}, 0);
     highp int level = ceLutLevel(sz.x * sz.y);
     if (ceMarked(${e}, sz.x, level)) {
-      const mat3 toRec2020 = ${un(m)};
-      const mat3 toSrgb = ${un(h)};
+      const mat3 toRec2020 = ${ln(m)};
+      const mat3 toSrgb = ${ln(h)};
       float white = exp2(whiteLevel);
 #if SL_PROCESS_VERSION >= 2
       vec3 E = toRec2020 * (lin / white);
@@ -1717,10 +1718,10 @@ function Sn(e) {
 }
 `;
 }
-function Cn(e) {
+function Sn(e) {
 	return `u_${it(e)}_stageResult`;
 }
-function wn() {
+function Cn() {
 	let e = [], { chunks: t } = ut(ke());
 	for (let n of R) for (let r of N) {
 		let i = `${n}${ot[r]}`;
@@ -1737,22 +1738,22 @@ function wn() {
 	}
 	return e;
 }
-function Tn() {
+function wn() {
 	return {
-		glsl: bn,
+		glsl: yn,
 		helpers: `precision highp int;
-${fn}
-${mn}
-${vn}`,
+${dn}
+${pn}
+${_n}`,
 		iterations: 1,
-		uniforms: wn()
+		uniforms: Cn()
 	};
 }
 var $ = V;
-function En() {
+function Tn() {
 	return {
-		glsl: xn,
-		helpers: `${fn}\n${yn}`,
+		glsl: bn,
+		helpers: `${dn}\n${vn}`,
 		iterations: 1,
 		uniforms: [
 			{
@@ -1802,14 +1803,14 @@ function En() {
 		]
 	};
 }
-function Dn() {
+function En() {
 	return {
 		id: H,
 		name: "Colour Equaliser",
 		phase: "scene-linear",
 		priority: 85,
-		glsl: Sn(Cn(H)),
-		helpers: `${fn}\n${yn}`,
+		glsl: xn(Sn(H)),
+		helpers: `${dn}\n${vn}`,
 		uniforms: [
 			{
 				key: "whiteLevel",
@@ -1839,28 +1840,28 @@ function Dn() {
 				default: 0
 			}
 		],
-		passes: [Tn(), En()],
+		passes: [wn(), Tn()],
 		presetScope: "global",
 		mask: { maskable: !0 }
 	};
 }
-function On() {
-	return [Dn()];
+function Dn() {
+	return [En()];
 }
 //#endregion
 //#region src/index.ts
-var kn = `${rt}.panel`, An = null, jn = [];
-function Mn() {
+var On = `${rt}.panel`, kn = null, An = [];
+function jn() {
 	let e = q().stores.useDevelopStore.getState();
 	e.setDynParams(ht()), e.commitEdit("Colour Equaliser reset");
 }
-function Nn(e) {
+function Mn(e) {
 	vt(e), bt();
-	for (let t of On()) e.registerProcessingStage(t);
+	for (let t of Dn()) e.registerProcessingStage(t);
 	e.registerPanel({
-		id: kn,
+		id: On,
 		title: "Colour Equaliser",
-		component: Wt,
+		component: Ut,
 		defaultDock: {
 			module: "develop",
 			direction: "right",
@@ -1868,28 +1869,28 @@ function Nn(e) {
 			width: 268
 		},
 		modules: ["develop"],
-		onReset: Mn,
+		onReset: jn,
 		mask: {
-			component: Wt,
+			component: Ut,
 			owns: [...lt(), ...Object.values(U)]
 		}
-	}), jn = [Jt(), an()], An = e.stores.useDevelopStore.subscribe((e, t) => {
+	}), An = [qt(), rn()], kn = e.stores.useDevelopStore.subscribe((e, t) => {
 		if (e.paramBag === t.paramBag) return;
 		let n = gt(e.paramBag);
 		n && e.setDynParams(n);
 	});
 }
-function Pn() {
-	An?.(), An = null;
+function Nn() {
+	kn?.(), kn = null;
 	try {
 		Y().getState().setMode(null);
-		for (let e of jn) e();
-		jn = [];
+		for (let e of An) e();
+		An = [];
 		let e = q();
-		for (let t of On()) e.unregisterProcessingStage(t.id);
+		for (let t of Dn()) e.unregisterProcessingStage(t.id);
 	} catch {}
 }
 //#endregion
-export { Nn as activate, Pn as deactivate };
+export { Mn as activate, Nn as deactivate };
 
 //# sourceMappingURL=index.js.map
